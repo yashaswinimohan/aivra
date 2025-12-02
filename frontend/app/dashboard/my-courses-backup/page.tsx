@@ -1,18 +1,25 @@
 "use client";
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, User } from "firebase/auth";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 
+interface Course {
+    id: string;
+    title: string;
+    description: string;
+    instructorId: string;
+}
+
 export default function MyCourses() {
-    const [courses, setCourses] = useState<any[]>([]);
+    const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<any>(null);
+
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
+
             if (currentUser) {
                 fetchUserCourses(currentUser);
             } else {
@@ -22,16 +29,16 @@ export default function MyCourses() {
         return () => unsubscribe();
     }, []);
 
-    const fetchUserCourses = async (currentUser: any) => {
+    const fetchUserCourses = async (currentUser: User) => {
         try {
             // Ideally, we should have an endpoint to filter by instructorId or enrollment
             // For now, fetching all and filtering client-side as a temporary measure
             // Real implementation should use a query parameter like ?instructorId=...
-            const res = await fetch("http://localhost:5000/api/courses");
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses`);
             const data = await res.json();
 
             // Filter courses where the current user is the instructor
-            const userCourses = data.filter((course: any) => course.instructorId === currentUser.uid);
+            const userCourses = data.filter((course: Course) => course.instructorId === currentUser.uid);
             setCourses(userCourses);
         } catch (error) {
             console.error("Failed to fetch courses:", error);
@@ -73,7 +80,7 @@ export default function MyCourses() {
                     ) : (
                         <div className="text-center bg-slate-800 rounded-xl p-12 border border-slate-700">
                             <h3 className="text-xl font-bold mb-2">No Courses Found</h3>
-                            <p className="text-gray-400 mb-6">You haven't created any courses yet.</p>
+                            <p className="text-gray-400 mb-6">You haven&apos;t created any courses yet.</p>
                             <Link href="/dashboard/create-course" className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition">
                                 Create Your First Course
                             </Link>

@@ -4,6 +4,8 @@ import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { User } from "firebase/auth";
 
 export default function ProfessorLogin() {
     const [email, setEmail] = useState("");
@@ -11,11 +13,11 @@ export default function ProfessorLogin() {
     const [error, setError] = useState("");
     const router = useRouter();
 
-    const promoteUser = async (user: any) => {
+    const promoteUser = async (user: User) => {
         try {
             const token = await user.getIdToken();
             // First ensure profile exists (in case it's a new user via this route)
-            await fetch("http://localhost:5000/api/users", {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -25,7 +27,7 @@ export default function ProfessorLogin() {
             });
 
             // Then promote
-            await fetch("http://localhost:5000/api/users/promote", {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/promote`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -42,8 +44,9 @@ export default function ProfessorLogin() {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             await promoteUser(userCredential.user);
             router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) setError(err.message);
+            else setError("An unknown error occurred");
         }
     };
 
@@ -53,8 +56,9 @@ export default function ProfessorLogin() {
             const userCredential = await signInWithPopup(auth, provider);
             await promoteUser(userCredential.user);
             router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) setError(err.message);
+            else setError("An unknown error occurred");
         }
     };
 
@@ -96,7 +100,7 @@ export default function ProfessorLogin() {
                         onClick={handleGoogleLogin}
                         className="w-full bg-white text-slate-900 p-3 rounded-lg font-semibold hover:bg-gray-100 transition flex items-center justify-center gap-2"
                     >
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                        <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width={20} height={20} unoptimized />
                         Sign in with Google
                     </button>
                 </div>

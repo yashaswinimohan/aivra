@@ -4,9 +4,15 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { User } from "firebase/auth";
+
+interface UserWithRole extends User {
+    role?: string;
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<UserWithRole | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const pathname = usePathname();
@@ -20,11 +26,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 // Fetch user profile to get role
                 try {
                     const token = await currentUser.getIdToken();
-                    const res = await fetch("http://localhost:5000/api/users/profile", {
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     const profile = await res.json();
-                    setUser((prev: any) => ({ ...prev, role: profile.role }));
+                    setUser((prev) => prev ? ({ ...prev, role: profile.role }) : null);
                 } catch (error) {
                     console.error("Failed to fetch user profile:", error);
                 }
@@ -61,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </nav>
                 <div className="pt-6 border-t border-slate-700">
                     <div className="flex items-center gap-3 mb-4">
-                        {user?.photoURL && <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full" />}
+                        {user?.photoURL && <Image src={user.photoURL} alt="Profile" width={32} height={32} className="rounded-full" unoptimized />}
                         <span className="text-sm truncate">{user?.email}</span>
                     </div>
                     <button onClick={handleLogout} className="w-full text-left p-2 text-red-400 hover:bg-red-500/10 rounded transition">

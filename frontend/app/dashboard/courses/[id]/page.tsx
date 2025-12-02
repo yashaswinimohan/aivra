@@ -3,16 +3,27 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
+interface Module {
+    title: string;
+}
+
+interface Course {
+    id: string;
+    title: string;
+    description: string;
+    modules?: Module[];
+}
+
 export default function CourseDetail() {
     const { id } = useParams();
-    const [course, setCourse] = useState<any>(null);
+    const [course, setCourse] = useState<Course | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!id) return;
         const fetchCourse = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/courses/${id}`);
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses/${id}`);
                 if (!res.ok) throw new Error("Course not found");
                 const data = await res.json();
                 setCourse(data);
@@ -43,7 +54,7 @@ export default function CourseDetail() {
                         <h2 className="text-2xl font-bold mb-6">Course Modules</h2>
                         {course.modules && course.modules.length > 0 ? (
                             <div className="space-y-4">
-                                {course.modules.map((module: any, index: number) => (
+                                {course.modules.map((module: Module, index: number) => (
                                     <div key={index} className="bg-slate-700/50 p-4 rounded-lg flex justify-between items-center">
                                         <span className="font-medium">Module {index + 1}: {module.title}</span>
                                         <button className="text-sm bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition">

@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } f
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Signup() {
     const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ export default function Signup() {
             const user = userCredential.user;
 
             // Create user profile in backend
-            await fetch("http://localhost:5000/api/users", {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -34,8 +35,9 @@ export default function Signup() {
             });
 
             router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) setError(err.message);
+            else setError("An unknown error occurred");
         }
     };
 
@@ -46,7 +48,7 @@ export default function Signup() {
             const user = userCredential.user;
 
             // Create user profile in backend (idempotent)
-            await fetch("http://localhost:5000/api/users", {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -55,8 +57,9 @@ export default function Signup() {
             });
 
             router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) setError(err.message);
+            else setError("An unknown error occurred");
         }
     };
 
@@ -117,7 +120,7 @@ export default function Signup() {
                         onClick={handleGoogleLogin}
                         className="w-full bg-white text-slate-900 p-3 rounded-lg font-semibold hover:bg-gray-100 transition flex items-center justify-center gap-2"
                     >
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                        <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width={20} height={20} unoptimized />
                         Sign in with Google
                     </button>
                 </div>

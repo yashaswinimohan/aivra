@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
+interface Attachment {
+    type: 'file' | 'url';
+    name: string;
+    url: string;
+}
+
 export default function CreateCourse() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -14,7 +20,7 @@ export default function CreateCourse() {
     const [startDate, setStartDate] = useState("");
     const [domain, setDomain] = useState("");
     const [tags, setTags] = useState("");
-    const [attachments, setAttachments] = useState<any[]>([]);
+    const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [newAttachmentType, setNewAttachmentType] = useState<'file' | 'url'>('file');
     const [newAttachmentUrl, setNewAttachmentUrl] = useState("");
     const [newAttachmentFile, setNewAttachmentFile] = useState<File | null>(null);
@@ -30,7 +36,7 @@ export default function CreateCourse() {
 
             try {
                 const token = await currentUser.getIdToken();
-                const res = await fetch("http://localhost:5000/api/users/profile", {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const profile = await res.json();
@@ -83,7 +89,7 @@ export default function CreateCourse() {
 
         try {
             const token = await auth.currentUser?.getIdToken();
-            const res = await fetch("http://localhost:5000/api/courses", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
