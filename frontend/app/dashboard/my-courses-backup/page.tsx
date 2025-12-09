@@ -57,20 +57,20 @@ export default function MyCourses() {
             </div>
 
             {loading ? (
-                <div className="text-center text-gray-400">Loading your courses...</div>
+                <div className="text-center text-slate-500">Loading your courses...</div>
             ) : (
                 <>
                     {courses.length > 0 ? (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {courses.map((course) => (
-                                <div key={course.id} className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-blue-500/50 transition group">
-                                    <div className="h-40 bg-slate-700 flex items-center justify-center">
+                                <div key={course.id} className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-blue-500/50 transition group shadow-sm">
+                                    <div className="h-40 bg-slate-100 flex items-center justify-center">
                                         <span className="text-4xl">🎓</span>
                                     </div>
                                     <div className="p-6">
-                                        <h3 className="text-xl font-bold mb-2 group-hover:text-blue-400 transition">{course.title}</h3>
-                                        <p className="text-gray-400 mb-4 line-clamp-2">{course.description}</p>
-                                        <Link href={`/courses/${course.id}`} className="block w-full text-center bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg transition">
+                                        <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 transition">{course.title}</h3>
+                                        <p className="text-slate-500 mb-4 line-clamp-2">{course.description}</p>
+                                        <Link href={`/courses/${course.id}`} className="block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-900 py-2 rounded-lg transition">
                                             View Course
                                         </Link>
                                     </div>
@@ -78,9 +78,9 @@ export default function MyCourses() {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center bg-slate-800 rounded-xl p-12 border border-slate-700">
+                        <div className="text-center bg-white rounded-xl p-12 border border-slate-200 shadow-sm">
                             <h3 className="text-xl font-bold mb-2">No Courses Found</h3>
-                            <p className="text-gray-400 mb-6">You haven&apos;t created any courses yet.</p>
+                            <p className="text-slate-500 mb-6">You haven&apos;t created any courses yet.</p>
                             <Link href="/dashboard/create-course" className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition">
                                 Create Your First Course
                             </Link>

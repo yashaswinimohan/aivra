@@ -8,27 +8,27 @@ export default function Dashboard() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Stats Card */}
-                <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                    <h3 className="text-gray-400 mb-2">Enrolled Courses</h3>
-                    <p className="text-4xl font-bold text-blue-400">0</p>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="text-slate-500 mb-2">Enrolled Courses</h3>
+                    <p className="text-4xl font-bold text-blue-600">0</p>
                 </div>
 
                 {/* Stats Card */}
-                <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                    <h3 className="text-gray-400 mb-2">Active Projects</h3>
-                    <p className="text-4xl font-bold text-emerald-400">0</p>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="text-slate-500 mb-2">Active Projects</h3>
+                    <p className="text-4xl font-bold text-emerald-600">0</p>
                 </div>
 
                 {/* Stats Card */}
-                <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                    <h3 className="text-gray-400 mb-2">Certificates</h3>
-                    <p className="text-4xl font-bold text-purple-400">0</p>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="text-slate-500 mb-2">Certificates</h3>
+                    <p className="text-4xl font-bold text-purple-600">0</p>
                 </div>
             </div>
 
             <div className="mt-12">
                 <h2 className="text-2xl font-bold mb-6">Recent Activity</h2>
-                <div className="bg-slate-800 rounded-xl border border-slate-700 p-8 text-center text-gray-400">
+                <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-500 shadow-sm">
                     No recent activity found. Start a course to see progress here!
                 </div>
             </div>

@@ -26,7 +26,7 @@ exports.createUserProfile = async (req, res) => {
         const doc = await userRef.get();
 
         if (doc.exists) {
-            return res.status(200).json({ message: 'User already exists' });
+            return res.status(200).json({ message: 'User already exists', ...doc.data() });
         }
 
         // Create new user with default 'student' role
@@ -36,6 +36,7 @@ exports.createUserProfile = async (req, res) => {
             lastName: lastName || '',
             displayName: `${firstName || ''} ${lastName || ''}`.trim(),
             role: 'student',
+            isOnboardingComplete: false,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
@@ -83,6 +84,7 @@ exports.updateUserProfile = async (req, res) => {
             displayName,
             role: role || 'student', // Default role
             bio,
+            isOnboardingComplete: true,
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 

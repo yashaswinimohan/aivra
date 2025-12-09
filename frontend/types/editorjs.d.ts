@@ -1,0 +1,9 @@
+declare module '@editorjs/checklist';
+declare module '@editorjs/table';
+declare module '@editorjs/marker';
+declare module '@editorjs/inline-code';
+declare module '@editorjs/underline';
+declare module 'editorjs-text-alignment-blocktune';
+declare module '@editorjs/list';
+declare module '@editorjs/paragraph';
+declare module '@editorjs/header';

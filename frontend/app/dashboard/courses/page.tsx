@@ -9,6 +9,7 @@ interface Course {
     id: string;
     title: string;
     description: string;
+    status: 'draft' | 'published';
 }
 
 export default function Courses() {
@@ -51,7 +52,7 @@ export default function Courses() {
     return (
         <DashboardLayout>
             <div className="flex justify-between items-center mb-12">
-                <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
+                <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-emerald-600">
                     Course Catalog
                 </h1>
                 {userRole === 'professor' && (
@@ -62,20 +63,37 @@ export default function Courses() {
             </div>
 
             {loading ? (
-                <div className="text-center text-gray-400">Loading courses...</div>
+                <div className="text-center text-slate-500">Loading courses...</div>
             ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {courses.map((course) => (
-                        <div key={course.id} className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-blue-500/50 transition group">
-                            <div className="h-48 bg-slate-700 flex items-center justify-center">
+                        <div key={course.id} className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-blue-500/50 transition group shadow-sm relative">
+                            <div className="h-48 bg-slate-100 flex items-center justify-center">
                                 <span className="text-4xl">📚</span>
                             </div>
                             <div className="p-6">
-                                <h3 className="text-xl font-bold mb-2 group-hover:text-blue-400 transition">{course.title}</h3>
-                                <p className="text-gray-400 mb-4 line-clamp-2">{course.description}</p>
-                                <Link href={`/dashboard/courses/${course.id}`} className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition">
-                                    View Course
+                                {course.status === 'published' && (
+                                    <span className="absolute top-3 right-3 bg-emerald-100 text-emerald-600 text-xs font-bold px-2 py-1 rounded-full shadow-sm z-10">
+                                        PUBLISHED
+                                    </span>
+                                )}
+                                <Link href={`/dashboard/courses/${course.id}`}>
+                                    <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 transition cursor-pointer">{course.title}</h3>
                                 </Link>
+                                <p className="text-slate-500 mb-4 line-clamp-2">{course.description}</p>
+                                {course.status === 'draft' ? (
+                                    <Link href={`/dashboard/create-course?courseId=${course.id}`} className="block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg transition border border-slate-300">
+                                        Continue Editing
+                                    </Link>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        {userRole === 'professor' && (
+                                            <Link href={`/dashboard/courses/${course.id}/manage`} className="block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg transition border border-slate-300">
+                                                Manage
+                                            </Link>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -83,7 +101,7 @@ export default function Courses() {
             )}
 
             {!loading && courses.length === 0 && (
-                <div className="text-center text-gray-400 mt-12">
+                <div className="text-center text-slate-500 mt-12">
                     No courses available yet. Check back later!
                 </div>
             )}
