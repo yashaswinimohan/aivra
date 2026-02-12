@@ -20,9 +20,10 @@ export interface Module {
 interface CurriculumBuilderProps {
     modules: Module[];
     onChange: (modules: Module[]) => void;
+    onAutoSave?: (updatedModules: Module[]) => void;
 }
 
-export default function CurriculumBuilder({ modules, onChange }: CurriculumBuilderProps) {
+export default function CurriculumBuilder({ modules, onChange, onAutoSave }: CurriculumBuilderProps) {
     // const [modules, setModules] = useState<Module[]>([
     //     { id: '1', title: 'Introduction', description: 'Getting started with the course', chapters: [] }
     // ]);
@@ -46,16 +47,19 @@ export default function CurriculumBuilder({ modules, onChange }: CurriculumBuild
             description: '',
             chapters: []
         };
-        onChange([...modules, newModule]);
+        const updatedModules = [...modules, newModule];
+        onChange(updatedModules);
         setExpandedModules([...expandedModules, newModule.id]);
     };
 
     const deleteModule = (id: string) => {
-        onChange(modules.filter(m => m.id !== id));
+        const updatedModules = modules.filter(m => m.id !== id);
+        onChange(updatedModules);
     };
 
     const updateModule = (id: string, field: 'title' | 'description', value: string) => {
-        onChange(modules.map(m => m.id === id ? { ...m, [field]: value } : m));
+        const updatedModules = modules.map(m => m.id === id ? { ...m, [field]: value } : m);
+        onChange(updatedModules);
     };
 
     const openAddChapter = (moduleId: string) => {
@@ -67,7 +71,7 @@ export default function CurriculumBuilder({ modules, onChange }: CurriculumBuild
     const handleSaveChapter = (chapterData: Omit<Chapter, 'id'>) => {
         if (!currentModuleId) return;
 
-        onChange(modules.map(m => {
+        const updatedModules = modules.map(m => {
             if (m.id !== currentModuleId) return m;
 
             if (editingChapterId) {
@@ -87,7 +91,12 @@ export default function CurriculumBuilder({ modules, onChange }: CurriculumBuild
                     chapters: [...m.chapters, newChapter]
                 };
             }
-        }));
+        });
+
+        onChange(updatedModules);
+        if (onAutoSave) {
+            onAutoSave(updatedModules);
+        }
         setIsModalOpen(false);
     };
 
@@ -215,6 +224,7 @@ export default function CurriculumBuilder({ modules, onChange }: CurriculumBuild
             </div>
 
             <ChapterModal
+                key={editingChapterId || 'new-chapter'}
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveChapter}

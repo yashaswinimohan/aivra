@@ -20,3 +20,31 @@ body {
   color: #171717 !important;
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Force EditorJS alignments */
+#editorjs .ce-block__content[data-alignment="left"],
+#editorjs .cdx-list[data-alignment="left"],
+#editorjs .ce-header[data-alignment="left"] {
+  text-align: left !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+#editorjs .ce-block__content[data-alignment="center"],
+#editorjs .ce-header[data-alignment="center"] {
+  text-align: center !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+#editorjs .ce-block__content[data-alignment="right"],
+#editorjs .ce-header[data-alignment="right"] {
+  text-align: right !important;
+  justify-content: flex-end !important;
+  align-items: flex-end !important;
+}
+
+/* Default left alignment for lists if no data-alignment is present */
+#editorjs .cdx-list:not([data-alignment]) {
+  text-align: left !important;
+}

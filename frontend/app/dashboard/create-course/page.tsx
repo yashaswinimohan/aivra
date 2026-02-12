@@ -162,10 +162,11 @@ function CreateCourseContent() {
         setAttachments(attachments.filter((_, i) => i !== index));
     };
 
-    const handleSave = async (status: 'draft' | 'published', shouldRedirect: boolean) => {
+    const handleSave = async (status: 'draft' | 'published', shouldRedirect: boolean, shouldAdvanceStep: boolean, modulesOverride?: Module[]) => {
         setLoading(true);
         try {
             const token = await auth.currentUser?.getIdToken();
+            // ... (rest of logic same until success block)
             const method = courseId ? "PUT" : "POST";
             const url = courseId
                 ? `${process.env.NEXT_PUBLIC_API_URL}/api/courses/${courseId}`
@@ -181,7 +182,7 @@ function CreateCourseContent() {
                 domain,
                 tags: tags.split(',').map(tag => tag.trim()).filter(t => t), // Convert string back to array
                 attachments,
-                modules, // Include modules
+                modules: modulesOverride || modules, // Use override if provided, else state
                 status
             };
 
@@ -214,7 +215,7 @@ function CreateCourseContent() {
 
                 if (shouldRedirect) {
                     router.push("/dashboard/courses");
-                } else {
+                } else if (shouldAdvanceStep) {
                     setStep(step + 1);
                 }
             } else {
@@ -487,7 +488,7 @@ function CreateCourseContent() {
                                 <div className="pt-6 border-t border-slate-100 flex justify-between items-center">
                                     <button
                                         type="button"
-                                        onClick={() => handleSave('draft', true)}
+                                        onClick={() => handleSave('draft', true, false)}
                                         disabled={loading}
                                         className="px-6 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition flex items-center gap-2"
                                     >
@@ -497,7 +498,7 @@ function CreateCourseContent() {
 
                                     <button
                                         type="button"
-                                        onClick={() => handleSave('draft', false)} // Save as draft but continue to next step (essentially temporary save)
+                                        onClick={() => handleSave('draft', false, true)} // Save as draft but continue to next step
                                         disabled={loading}
                                         className="px-6 py-3 rounded-lg font-semibold bg-slate-900 hover:bg-slate-800 text-white transition disabled:opacity-50 flex items-center gap-2"
                                     >
@@ -518,7 +519,23 @@ function CreateCourseContent() {
                             exit={{ opacity: 0, x: -20 }}
                             className="p-8"
                         >
-                            <CurriculumBuilder modules={modules} onChange={setModules} />
+                            <CurriculumBuilder
+                                modules={modules}
+                                onChange={setModules}
+                                onAutoSave={(updatedModules) => {
+                                    setModules(updatedModules);
+                                    // Use setTimeout to allow state update to propagate if needed, 
+                                    // but we can pass updatedModules directly to handleSave if we modified it to accept overrides.
+                                    // ideally handleSave should rely on state, but state updates are async.
+                                    // A safer way is to modify handleSave to accept data Override.
+
+                                    // For now, let's modify handleSave signature or just trigger it.
+                                    // Accessing state inside handleSave might be stale if triggered immediately after setModules?
+                                    // Actually, we can reuse handleSave but we need to ensure it uses the *updated* modules.
+                                    // Let's modify handleSave to accept optional modules override.
+                                    handleSave('draft', false, false, updatedModules);
+                                }}
+                            />
 
                             <div className="mt-8 flex justify-between">
                                 <button
@@ -561,7 +578,7 @@ function CreateCourseContent() {
                                         Back
                                     </button>
                                     <button
-                                        onClick={() => handleSave('published', true)}
+                                        onClick={() => handleSave('published', true, false)}
                                         className="px-6 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
                                     >
                                         Publish Course

@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, FileText, Link as LinkIcon, Menu, X, CheckCircle, PlayCircle } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/context/AuthContext";
 
 interface ChapterResource {
@@ -16,6 +15,18 @@ interface ChapterResource {
 interface ChapterContent {
     editorData: any;
     resources: ChapterResource[];
+    mcqSection?: {
+        questions: MCQ[];
+        passingScore: number;
+    };
+}
+
+interface MCQ {
+    id: string;
+    question: string;
+    options: string[];
+    correctAnswers: number[]; // Indices of correct options
+    type: 'single' | 'multiple';
 }
 
 interface Chapter {
@@ -50,6 +61,13 @@ export default function LearnPage() {
     const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
     const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+
+    // MCQ State
+    const [quizAnswers, setQuizAnswers] = useState<Record<string, number[]>>({});
+    const [quizScore, setQuizScore] = useState<number | null>(null);
+    const [quizPassed, setQuizPassed] = useState(false);
+    const [showQuizResult, setShowQuizResult] = useState(false);
+    const [isQuizStarted, setIsQuizStarted] = useState(false);
 
     const editorInstanceRef = useRef<any>(null);
 
@@ -139,6 +157,62 @@ export default function LearnPage() {
             // Revert on error
             setCompletedChapters(completedChapters);
         }
+    };
+
+    // Quiz Handlers
+    const handleOptionSelect = (questionId: string, optionIndex: number, type: 'single' | 'multiple') => {
+        setQuizAnswers(prev => {
+            const currentAnswers = prev[questionId] || [];
+            if (type === 'single') {
+                return { ...prev, [questionId]: [optionIndex] };
+            } else {
+                const newAnswers = currentAnswers.includes(optionIndex)
+                    ? currentAnswers.filter(i => i !== optionIndex)
+                    : [...currentAnswers, optionIndex];
+                return { ...prev, [questionId]: newAnswers };
+            }
+        });
+    };
+
+    const handleQuizSubmit = async () => {
+        if (!course || !activeModuleId || !activeChapterId) return;
+
+        const activeModule = course.modules.find(m => m.id === activeModuleId);
+        const activeChapter = activeModule?.chapters.find(c => c.id === activeChapterId);
+
+        if (!activeChapter?.content?.mcqSection) return;
+
+        const { questions, passingScore } = activeChapter.content.mcqSection;
+        let correctCount = 0;
+
+        questions.forEach(q => {
+            const userAnswers = quizAnswers[q.id] || [];
+            // Sort arrays to compare
+            const userSorted = [...userAnswers].sort();
+            const correctSorted = [...q.correctAnswers].sort();
+
+            if (JSON.stringify(userSorted) === JSON.stringify(correctSorted)) {
+                correctCount++;
+            }
+        });
+
+        const scorePercentage = Math.round((correctCount / questions.length) * 100);
+        setQuizScore(scorePercentage);
+        const passed = scorePercentage >= passingScore;
+        setQuizPassed(passed);
+        setShowQuizResult(true);
+
+        if (passed && !completedChapters.includes(activeChapterId)) {
+            await handleToggleComplete(); // Mark as complete
+        }
+    };
+
+    const resetQuiz = () => {
+        setQuizAnswers({});
+        setQuizScore(null);
+        setQuizPassed(false);
+        setShowQuizResult(false);
+        setIsQuizStarted(false);
     };
 
     const getNextChapter = () => {
@@ -268,6 +342,10 @@ export default function LearnPage() {
     }, [activeChapterId, course]);
 
 
+    useEffect(() => {
+        resetQuiz();
+    }, [activeChapterId]);
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -387,26 +465,46 @@ export default function LearnPage() {
                             <div className="animate-in fade-in duration-500">
                                 <div className="flex items-center justify-between mb-8">
                                     <h2 className="text-3xl font-bold text-slate-900">{activeChapter.title}</h2>
-                                    <button
-                                        onClick={handleToggleComplete}
-                                        className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all
+                                    {!activeChapter.content?.mcqSection ? (
+                                        <button
+                                            onClick={handleToggleComplete}
+                                            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all
+                                                ${completedChapters.includes(activeChapter.id)
+                                                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                                                    : 'bg-slate-900 text-white hover:bg-slate-800 shadow-md hover:shadow-lg'}
+                                            `}
+                                        >
+                                            {completedChapters.includes(activeChapter.id) ? (
+                                                <>
+                                                    <CheckCircle size={18} />
+                                                    Completed
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-4 h-4 rounded-full border-2 border-white/50" />
+                                                    Mark as Complete
+                                                </>
+                                            )}
+                                        </button>
+                                    ) : (
+                                        <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2
                                             ${completedChapters.includes(activeChapter.id)
-                                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                                                : 'bg-slate-900 text-white hover:bg-slate-800 shadow-md hover:shadow-lg'}
-                                        `}
-                                    >
-                                        {completedChapters.includes(activeChapter.id) ? (
-                                            <>
-                                                <CheckCircle size={18} />
-                                                Completed
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="w-4 h-4 rounded-full border-2 border-white/50" />
-                                                Mark as Complete
-                                            </>
-                                        )}
-                                    </button>
+                                                ? 'bg-emerald-100 text-emerald-700'
+                                                : 'bg-slate-100 text-slate-500'}
+                                        `}>
+                                            {completedChapters.includes(activeChapter.id) ? (
+                                                <>
+                                                    <CheckCircle size={18} />
+                                                    Passed
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-4 h-4 rounded-full border-2 border-slate-300" />
+                                                    Pass Quiz to Complete
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div id="read-only-editor" className="prose max-w-none prose-slate prose-lg mb-12"></div>
@@ -439,26 +537,112 @@ export default function LearnPage() {
                                     </div>
                                 )}
 
+                                {/* MCQ Quiz Section */}
+                                {activeChapter.content?.mcqSection && (
+                                    <div className="mt-16 pt-8 border-t border-slate-200">
+                                        <h3 className="text-2xl font-bold mb-6 text-slate-900">Chapter Quiz</h3>
+
+                                        {!isQuizStarted ? (
+                                            <div className="bg-slate-50 rounded-xl p-8 text-center border border-slate-200 animate-in fade-in slide-in-from-bottom-2">
+                                                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <PlayCircle size={32} />
+                                                </div>
+                                                <h4 className="text-lg font-bold text-slate-900 mb-2">Ready to test your knowledge?</h4>
+                                                <p className="text-slate-500 mb-6">Take this quiz to verify your understanding of the chapter.</p>
+                                                <button
+                                                    onClick={() => setIsQuizStarted(true)}
+                                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition shadow-sm hover:shadow-md"
+                                                >
+                                                    Start Quiz
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="animate-in fade-in slide-in-from-bottom-4">
+                                                {showQuizResult && (
+                                                    <div className={`p-6 rounded-xl mb-8 border ${quizPassed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <h4 className={`text-lg font-bold ${quizPassed ? 'text-green-800' : 'text-red-800'}`}>
+                                                                {quizPassed ? 'Quiz Passed!' : 'Quiz Failed'}
+                                                            </h4>
+                                                            <span className={`text-2xl font-black ${quizPassed ? 'text-green-600' : 'text-red-600'}`}>
+                                                                {quizScore}%
+                                                            </span>
+                                                        </div>
+                                                        <p className={`text-sm ${quizPassed ? 'text-green-700' : 'text-red-700'}`}>
+                                                            {quizPassed
+                                                                ? "Great job! You can now proceed to the next chapter."
+                                                                : `You need ${activeChapter.content.mcqSection.passingScore}% to pass. Please try again.`}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                <div className="space-y-8">
+                                                    {activeChapter.content.mcqSection.questions.map((q, idx) => (
+                                                        <div key={q.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                                                            <h4 className="text-lg font-medium text-slate-900 mb-4">
+                                                                {idx + 1}. {q.question}
+                                                            </h4>
+                                                            <div className="space-y-3">
+                                                                {q.options.map((opt, optIdx) => {
+                                                                    const isSelected = (quizAnswers[q.id] || []).includes(optIdx);
+                                                                    return (
+                                                                        <button
+                                                                            key={optIdx}
+                                                                            onClick={() => handleOptionSelect(q.id, optIdx, q.type)}
+                                                                            disabled={showQuizResult && quizPassed}
+                                                                            className={`w-full text-left p-4 rounded-lg border transition flex items-center justify-between
+                                                                                ${isSelected
+                                                                                    ? 'bg-blue-50 border-blue-500 text-blue-700'
+                                                                                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'}
+                                                                            `}
+                                                                        >
+                                                                            <span>{opt}</span>
+                                                                            {isSelected && <CheckCircle size={18} className="text-blue-600" />}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {!quizPassed && (
+                                                    <div className="mt-8 flex justify-end">
+                                                        <button
+                                                            onClick={showQuizResult ? resetQuiz : handleQuizSubmit}
+                                                            className="px-8 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium transition shadow-lg hover:shadow-xl"
+                                                        >
+                                                            {showQuizResult ? "Retry Quiz" : "Submit Quiz"}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Bottom Navigation */}
-                                <div className="mt-16 flex justify-end pt-8 border-t border-slate-200">
-                                    {nextChapter ? (
-                                        <button
-                                            onClick={handleNext}
-                                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center gap-2"
-                                        >
-                                            Next: {nextChapter.title}
-                                            <ChevronLeft size={20} className="rotate-180" />
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={handleFinish}
-                                            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium flex items-center gap-2"
-                                        >
-                                            Finish Course
-                                            <CheckCircle size={20} />
-                                        </button>
-                                    )}
-                                </div>
+                                {(completedChapters.includes(activeChapter.id) || !activeChapter.content?.mcqSection) && (
+                                    <div className="mt-16 flex justify-end pt-8 border-t border-slate-200">
+                                        {nextChapter ? (
+                                            <button
+                                                onClick={handleNext}
+                                                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center gap-2"
+                                            >
+                                                Next: {nextChapter.title}
+                                                <ChevronLeft size={20} className="rotate-180" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={handleFinish}
+                                                className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium flex items-center gap-2"
+                                            >
+                                                Finish Course
+                                                <CheckCircle size={20} />
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="text-center py-20">
