@@ -32,9 +32,11 @@ try {
 // Routes
 const courseRoutes = require('./routes/courseRoutes');
 const userRoutes = require('./routes/userRoutes');
+const enrollmentRoutes = require('./routes/enrollmentRoutes');
 
 app.use('/api/courses', courseRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
 
 app.get('/', (req, res) => {
   res.send('Aivra Backend is running');

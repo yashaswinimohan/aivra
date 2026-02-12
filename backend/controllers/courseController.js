@@ -28,7 +28,7 @@ exports.getCourseById = async (req, res) => {
 // Create a new course
 exports.createCourse = async (req, res) => {
     try {
-        const { title, description, duration, seats, attachments, tags, domain, startDate } = req.body;
+        const { title, description, duration, seats, attachments, tags, domain, startDate, level } = req.body;
         const instructorId = req.user.uid; // Get ID from authenticated user
 
         const newCourse = {
@@ -41,6 +41,7 @@ exports.createCourse = async (req, res) => {
             attachments: attachments || [],
             tags: tags || [],
             domain: domain || 'General',
+            level: level || 'Beginner',
             status: req.body.status || 'published',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         };

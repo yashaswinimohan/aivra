@@ -57,9 +57,9 @@ export default function CourseDetail() {
                                 {course.modules.map((module: Module, index: number) => (
                                     <div key={index} className="bg-slate-50 p-4 rounded-lg flex justify-between items-center border border-slate-100">
                                         <span className="font-medium">Module {index + 1}: {module.title}</span>
-                                        <button className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition">
+                                        <Link href={`/dashboard/courses/${id}/learn`} className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition">
                                             Start
-                                        </button>
+                                        </Link>
                                     </div>
                                 ))}
                             </div>

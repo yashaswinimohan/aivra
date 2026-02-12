@@ -58,8 +58,8 @@ export default function ManageCourse() {
             });
 
             if (res.ok) {
-                const updated = await res.json();
-                setCourse(updated);
+                // Data returned is just a message, so we update local state manually
+                setCourse(prev => prev ? { ...prev, status: newStatus } : null);
                 alert(`Course ${newStatus === 'draft' ? 'unpublished' : 'archived'} successfully.`);
                 if (newStatus === 'archived') {
                     router.push("/dashboard/courses");
@@ -99,7 +99,7 @@ export default function ManageCourse() {
                             course.status === 'draft' ? 'bg-slate-100 text-slate-700' :
                                 'bg-amber-100 text-amber-700'
                             }`}>
-                            {course.status.toUpperCase()}
+                            {course.status?.toUpperCase() || 'UNKNOWN'}
                         </span>
                         <span className="text-slate-400 text-sm">•</span>
                         <Link href={`/dashboard/courses/${courseId}`} className="text-blue-600 hover:underline text-sm font-medium">

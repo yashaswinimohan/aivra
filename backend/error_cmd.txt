@@ -1,0 +1,20 @@
+[dotenv@17.2.3] injecting env (4) from .env.development -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+Loaded environment variables from .env.development
+Firebase Admin Initialized
+C:\Work\github-repos\yashu\aivra\backend\node_modules\router\lib\route.js:228
+        throw new TypeError('argument handler must be a function')
+        ^
+
+TypeError: argument handler must be a function
+    at Route.<computed> [as get] (C:\Work\github-repos\yashu\aivra\backend\node_modules\router\lib\route.js:228:15)
+    at Router.<computed> [as get] (C:\Work\github-repos\yashu\aivra\backend\node_modules\router\index.js:448:19)
+    at Object.<anonymous> (C:\Work\github-repos\yashu\aivra\backend\routes\enrollmentRoutes.js:6:8)
+    at Module._compile (node:internal/modules/cjs/loader:1761:14)
+    at Object..js (node:internal/modules/cjs/loader:1893:10)
+    at Module.load (node:internal/modules/cjs/loader:1481:32)
+    at Module._load (node:internal/modules/cjs/loader:1300:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.require (node:internal/modules/cjs/loader:1504:12)
+
+Node.js v24.11.1
