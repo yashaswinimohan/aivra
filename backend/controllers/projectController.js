@@ -15,7 +15,7 @@ exports.getAllProjects = async (req, res) => {
 // Create a new project
 exports.createProject = async (req, res) => {
     try {
-        const { title, description, duration, roles_needed, related_course } = req.body;
+        const { title, description, duration, roles_needed, related_course, public_resources, private_resources, tags } = req.body;
         const ownerId = req.user.uid; // Get ID from authenticated user
 
         const newProject = {
@@ -25,6 +25,9 @@ exports.createProject = async (req, res) => {
             duration: duration || 'Not specified',
             roles_needed: roles_needed || [],
             related_course: related_course || null,
+            public_resources: public_resources || [],
+            private_resources: private_resources || [],
+            tags: tags || [],
             status: req.body.status || 'Open',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         };

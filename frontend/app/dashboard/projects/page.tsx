@@ -299,6 +299,17 @@ function ProjectCard({ project, isMember = false }: { project: any, isMember?: b
                     {project.description}
                 </p>
 
+                {/* Project Tags */}
+                {project.tags && project.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                        {project.tags.map((tag: string, i: number) => (
+                            <Badge key={i} variant="secondary" className="text-xs font-normal bg-blue-50 text-blue-700 hover:bg-blue-100 border-0">
+                                {tag}
+                            </Badge>
+                        ))}
+                    </div>
+                )}
+
                 {/* Related Course */}
                 {project.related_course && (
                     <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">

@@ -327,6 +327,19 @@ function ProjectWorkspace() {
                                         <p className="text-slate-700">{project.goal || project.description}</p>
                                     </div>
 
+                                    {project.tags && project.tags.length > 0 && (
+                                        <div>
+                                            <h4 className="text-sm font-medium text-slate-500 mb-2">Tags</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {project.tags.map((tag: string, i: number) => (
+                                                    <Badge key={i} className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-0">
+                                                        {tag}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {project.related_course && (
                                         <div>
                                             <h4 className="text-sm font-medium text-slate-500 mb-2">Related Course</h4>
@@ -369,6 +382,81 @@ function ProjectWorkspace() {
                                     </CardContent>
                                 </Card>
                             )}
+
+                            {/* Project Resources */}
+                            <Card className="border-slate-100">
+                                <CardHeader>
+                                    <CardTitle className="text-lg flex items-center gap-2">
+                                        <FolderOpen className="w-5 h-5" />
+                                        Project Resources
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    {/* Public Resources */}
+                                    <div>
+                                        <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                                            Public Resources
+                                        </h4>
+                                        {!project.public_resources || project.public_resources.length === 0 ? (
+                                            <p className="text-sm text-slate-500 italic px-2">No public resources available.</p>
+                                        ) : (
+                                            <ul className="grid sm:grid-cols-2 gap-3">
+                                                {project.public_resources.map((res: any, index: number) => (
+                                                    <li key={index}>
+                                                        <a href={res.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-white hover:border-blue-200 hover:shadow-sm transition-all group">
+                                                            <div className={`p-2 rounded-lg ${res.type === 'file' ? 'bg-amber-50 text-amber-600 group-hover:bg-amber-100' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-100'} transition-colors`}>
+                                                                {res.type === 'file' ? (
+                                                                    <svg className="w-4 h-4 min-w-4 max-w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                                ) : (
+                                                                    <svg className="w-4 h-4 min-w-4 max-w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="text-sm font-medium text-slate-900 truncate group-hover:text-blue-600 transition-colors" title={res.name}>{res.name}</span>
+                                                                <span className="text-xs text-slate-400 truncate uppercase">{res.type}</span>
+                                                            </div>
+                                                        </a>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+
+                                    {/* Private Resources */}
+                                    {isMember && (
+                                        <div>
+                                            <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-rose-400"></div>
+                                                Private Resources <span className="text-xs font-normal text-slate-400">(Contributors only)</span>
+                                            </h4>
+                                            {!project.private_resources || project.private_resources.length === 0 ? (
+                                                <p className="text-sm text-slate-500 italic px-2">No private resources available.</p>
+                                            ) : (
+                                                <ul className="grid sm:grid-cols-2 gap-3">
+                                                    {project.private_resources.map((res: any, index: number) => (
+                                                        <li key={index}>
+                                                            <a href={res.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-white hover:border-purple-200 hover:shadow-sm transition-all group">
+                                                                <div className={`p-2 rounded-lg ${res.type === 'file' ? 'bg-amber-50 text-amber-600 group-hover:bg-amber-100' : 'bg-purple-50 text-purple-600 group-hover:bg-purple-100'} transition-colors`}>
+                                                                    {res.type === 'file' ? (
+                                                                        <svg className="w-4 h-4 min-w-4 max-w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                                    ) : (
+                                                                        <svg className="w-4 h-4 min-w-4 max-w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex flex-col min-w-0">
+                                                                    <span className="text-sm font-medium text-slate-900 truncate group-hover:text-purple-600 transition-colors" title={res.name}>{res.name}</span>
+                                                                    <span className="text-xs text-slate-400 truncate uppercase">{res.type}</span>
+                                                                </div>
+                                                            </a>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </div>
 
                         {/* Team Members */}
