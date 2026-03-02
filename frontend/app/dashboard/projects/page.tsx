@@ -279,7 +279,7 @@ export default function Projects() {
 
 function ProjectCard({ project, isMember = false }: { project: any, isMember?: boolean }) {
     return (
-        <Link href={createPageUrl(`ProjectWorkspace?id=${project.id}`)}>
+        <Link href={createPageUrl(`/dashboard/project-workspace?id=${project.id}`)}>
             <div className="bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-lg hover:border-slate-200 transition-all duration-300 h-full flex flex-col group">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">

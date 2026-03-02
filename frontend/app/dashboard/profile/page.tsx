@@ -41,12 +41,16 @@ export default function Profile() {
     const [user, setUser] = useState<any>(null);
     const [isEditing, setIsEditing] = useState(false);
     interface EditData {
+        first_name: string;
+        last_name: string;
         bio: string;
         roles: string[];
         skills: string[];
     }
 
     const [editData, setEditData] = useState<EditData>({
+        first_name: '',
+        last_name: '',
         bio: '',
         roles: [],
         skills: []
@@ -59,6 +63,8 @@ export default function Profile() {
                 const response = await api.get('/users/profile');
                 setUser(response.data);
                 setEditData({
+                    first_name: response.data.first_name || response.data.firstName || '',
+                    last_name: response.data.last_name || response.data.lastName || '',
                     bio: response.data.bio || '',
                     roles: response.data.roles || [],
                     skills: response.data.skills || []
@@ -525,6 +531,25 @@ export default function Profile() {
                         <DialogTitle>Edit Profile</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-6 py-4">
+                        <div className="flex gap-4">
+                            <div className="flex-1">
+                                <label className="text-sm font-medium text-slate-700 mb-2 block">First Name</label>
+                                <Input
+                                    value={editData.first_name}
+                                    onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
+                                    placeholder="Jane"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <label className="text-sm font-medium text-slate-700 mb-2 block">Last Name</label>
+                                <Input
+                                    value={editData.last_name}
+                                    onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
+                                    placeholder="Doe"
+                                />
+                            </div>
+                        </div>
+
                         {/* Bio */}
                         <div>
                             <label className="text-sm font-medium text-slate-700 mb-2 block">Bio</label>

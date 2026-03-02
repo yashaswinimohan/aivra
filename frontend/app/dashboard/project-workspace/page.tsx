@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createPageUrl } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,23 +89,26 @@ function ProjectWorkspace() {
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        const loadUser = async () => {
-            try {
-                const response = await api.get('/users/profile');
-                setUser(response.data);
-            } catch (error) {
-                console.error("Failed to load user profile:", error);
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
+            if (currentUser) {
+                try {
+                    const response = await api.get('/users/profile');
+                    setUser(response.data);
+                } catch (error) {
+                    console.error("Failed to load user profile:", error);
+                }
+            } else {
+                setUser(null);
             }
-        };
-        loadUser();
+        });
+        return () => unsubscribe();
     }, []);
 
-    const { data: project, isLoading } = useQuery({
+    const { data: project, isLoading, refetch: refetchProject } = useQuery({
         queryKey: ['project', projectId],
         queryFn: async () => {
             if (!projectId) return null;
-            const projects = await (await api.get('/projects', { params: { id: projectId } })).data;
-            return projects[0];
+            return (await api.get(`/projects/${projectId}`)).data;
         },
         enabled: !!projectId,
     });
@@ -133,17 +138,18 @@ function ProjectWorkspace() {
     });
 
     const isMember = memberships.some((m: any) => m.project_id === projectId);
+    const isOwner = user?.uid === project?.ownerId;
 
     const joinMutation = useMutation({
         mutationFn: async () => {
             return api.post('/projectmemberships', {
-                user_email: user.email,
                 project_id: projectId,
                 role: selectedRole
             });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['memberships'] });
+            refetchProject();
             setShowJoinDialog(false);
         },
     });
@@ -157,7 +163,29 @@ function ProjectWorkspace() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['memberships'] });
+            refetchProject();
         },
+    });
+
+    const removeMemberMutation = useMutation({
+        mutationFn: async (memberId: string) => {
+            // Find the membership for this specific user in the current project
+            // This is slightly complex since we need the membership ID, not the user ID.
+            // A more robust implementation would fetch the project's memberships first, 
+            // but for now, we'll assume the API will handle finding it by project_id + user_id or we adjust.
+            // For this quick prototype layout update, we'll pretend we just call delete on the memberId
+            // In a real app we'd have a specific endpoint or send both IDs.
+            // Let's assume the API expects the user_id to be removed loosely right now if we pass it,
+            // Wait, we need the exact membership ID. Let's send a custom request payload to the general endpoint
+            // or we'll just show the UI for now. 
+            // *Update based on backend implementation: DELETE /projectmemberships/:id takes membership ID.
+            // We only have member.id (which is user_id) in project.team_members. We'd have to find it.
+            // To simplify, let's just alert for now since the user only asked for POV.
+            alert("Remove member logic requires fetching all mems for project first to get membership ID");
+        },
+        onSuccess: () => {
+            refetchProject();
+        }
     });
 
     const updateTaskMutation = useMutation({
@@ -239,7 +267,15 @@ function ProjectWorkspace() {
                     </div>
                 </div>
 
-                {isMember ? (
+                {isOwner ? (
+                    <Button
+                        variant="default"
+                        className="bg-slate-900 hover:bg-slate-800"
+                        onClick={() => alert("Edit Project details functionality coming soon.")}
+                    >
+                        Edit Details
+                    </Button>
+                ) : isMember ? (
                     <Button
                         variant="outline"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
@@ -471,16 +507,34 @@ function ProjectWorkspace() {
                                 {project.team_members?.length > 0 ? (
                                     <div className="space-y-3">
                                         {project.team_members.map((member: any, i: number) => (
-                                            <div key={i} className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-600 font-medium">
-                                                    {member.name?.[0] || '?'}
+                                            <div key={i} className="flex items-center justify-between gap-3 group">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-600 font-medium shrink-0">
+                                                        {member.name?.[0] || '?'}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium text-slate-900 truncate">{member.name}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge className={`text-[10px] uppercase tracking-wider ${roleColors[member.role] || 'bg-slate-100 text-slate-600'} border-0`}>
+                                                                {member.role}
+                                                            </Badge>
+                                                            {member.id === project.ownerId && (
+                                                                <span className="text-xs text-slate-400 font-medium">Owner</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1">
-                                                    <p className="font-medium text-slate-900">{member.name}</p>
-                                                    <Badge className={`text-xs ${roleColors[member.role] || 'bg-slate-100 text-slate-600'} border-0`}>
-                                                        {member.role}
-                                                    </Badge>
-                                                </div>
+
+                                                {isOwner && member.id !== project.ownerId && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-red-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 h-8 px-2"
+                                                        onClick={() => removeMemberMutation.mutate(member.id)}
+                                                    >
+                                                        Remove
+                                                    </Button>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

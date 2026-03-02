@@ -77,16 +77,26 @@ exports.promoteToAdmin = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
     try {
         const userId = req.user.uid;
-        const { displayName, role, bio } = req.body;
+        const { displayName, first_name, last_name, roles, skills, bio } = req.body;
 
         const userData = {
-            email: req.user.email,
-            displayName,
-            role: role || 'student', // Default role
-            bio,
-            isOnboardingComplete: true,
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
+
+        if (req.user.email) userData.email = req.user.email;
+        if (displayName !== undefined) userData.displayName = displayName;
+        if (first_name !== undefined) userData.first_name = first_name;
+        if (last_name !== undefined) userData.last_name = last_name;
+
+        if (first_name || last_name) {
+            userData.full_name = `${first_name || ''} ${last_name || ''}`.trim();
+        }
+
+        if (roles !== undefined) userData.roles = roles;
+        if (skills !== undefined) userData.skills = skills;
+        if (bio !== undefined) userData.bio = bio;
+
+        userData.isOnboardingComplete = true;
 
         await db.collection('users').doc(userId).set(userData, { merge: true });
         res.status(200).json({ message: 'User profile updated', ...userData });
