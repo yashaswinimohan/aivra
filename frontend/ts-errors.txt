@@ -1,0 +1,445 @@
+components/ui/command.tsx(2,45): error TS2307: Cannot find module 'cmdk' or its corresponding type declarations.
+components/ui/command.tsx(8,37): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/command.tsx(20,5): error TS7031: Binding element 'children' implicitly has an 'any' type.
+components/ui/command.tsx(26,18): error TS2322: Type '{ children: any; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<unknown>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<unknown>'.
+components/ui/command.tsx(35,42): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/command.tsx(50,41): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/command.tsx(65,42): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/command.tsx(77,46): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/command.tsx(82,41): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/command.tsx(95,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/context-menu.tsx(19,51): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/context-menu.tsx(19,62): error TS2339: Property 'inset' does not exist on type '{}'.
+components/ui/context-menu.tsx(19,69): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/context-menu.tsx(21,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/context-menu.tsx(34,51): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/context-menu.tsx(36,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/context-menu.tsx(45,48): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/context-menu.tsx(48,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/context-menu.tsx(58,45): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/context-menu.tsx(58,56): error TS2339: Property 'inset' does not exist on type '{}'.
+components/ui/context-menu.tsx(60,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/context-menu.tsx(70,53): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/context-menu.tsx(70,64): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/context-menu.tsx(70,74): error TS2339: Property 'checked' does not exist on type '{}'.
+components/ui/context-menu.tsx(72,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/context-menu.tsx(90,50): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/context-menu.tsx(90,61): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/context-menu.tsx(92,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/context-menu.tsx(108,46): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/context-menu.tsx(108,57): error TS2339: Property 'inset' does not exist on type '{}'.
+components/ui/context-menu.tsx(110,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/context-menu.tsx(120,50): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/context-menu.tsx(122,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/context-menu.tsx(129,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/drawer.tsx(4,43): error TS2307: Cannot find module 'vaul' or its corresponding type declarations.
+components/ui/drawer.tsx(22,43): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/drawer.tsx(30,43): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/drawer.tsx(30,54): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/drawer.tsx(48,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/drawer.tsx(58,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/drawer.tsx(65,41): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/drawer.tsx(73,47): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(19,52): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(19,63): error TS2339: Property 'inset' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(19,70): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(21,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/dropdown-menu.tsx(35,52): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(37,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/dropdown-menu.tsx(47,49): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(47,60): error TS2339: Property 'sideOffset' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(50,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/dropdown-menu.tsx(62,46): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(62,57): error TS2339: Property 'inset' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(64,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/dropdown-menu.tsx(74,54): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(74,65): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(74,75): error TS2339: Property 'checked' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(76,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/dropdown-menu.tsx(94,51): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(94,62): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(96,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/dropdown-menu.tsx(112,47): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(112,58): error TS2339: Property 'inset' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(114,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/dropdown-menu.tsx(120,51): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/dropdown-menu.tsx(122,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/dropdown-menu.tsx(129,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/form.tsx(4,58): error TS2307: Cannot find module 'react-hook-form' or its corresponding type declarations.
+components/ui/form.tsx(30,51): error TS2339: Property 'name' does not exist on type '{}'.
+components/ui/form.tsx(36,13): error TS2339: Property 'id' does not exist on type '{}'.
+components/ui/form.tsx(40,28): error TS2339: Property 'name' does not exist on type '{}'.
+components/ui/form.tsx(50,38): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/form.tsx(55,18): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/form.tsx(61,39): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/form.tsx(66,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLLabelElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLLabelElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLLabelElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLLabelElement | null'.
+components/ui/form.tsx(79,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLElement | null'.
+components/ui/form.tsx(92,45): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/form.tsx(97,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLParagraphElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLParagraphElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLParagraphElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLParagraphElement | null'.
+components/ui/form.tsx(105,41): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/form.tsx(105,52): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/form.tsx(115,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLParagraphElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLParagraphElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLParagraphElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLParagraphElement | null'.
+components/ui/hover-card.tsx(12,46): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/hover-card.tsx(12,57): error TS2339: Property 'align' does not exist on type '{}'.
+components/ui/hover-card.tsx(12,75): error TS2339: Property 'sideOffset' does not exist on type '{}'.
+components/ui/hover-card.tsx(14,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/input-otp.tsx(2,43): error TS2307: Cannot find module 'input-otp' or its corresponding type declarations.
+components/ui/input-otp.tsx(7,38): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/input-otp.tsx(7,49): error TS2339: Property 'containerClassName' does not exist on type '{}'.
+components/ui/input-otp.tsx(16,43): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/input-otp.tsx(17,10): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/input-otp.tsx(21,42): error TS2339: Property 'index' does not exist on type '{}'.
+components/ui/input-otp.tsx(21,49): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/input-otp.tsx(23,46): error TS18046: 'inputOTPContext' is of type 'unknown'.
+components/ui/input-otp.tsx(27,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/input-otp.tsx(47,10): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(39,37): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(41,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(50,44): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(52,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLButtonElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLButtonElement | null'.
+components/ui/menubar.tsx(61,47): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(61,58): error TS2339: Property 'inset' does not exist on type '{}'.
+components/ui/menubar.tsx(61,65): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/menubar.tsx(63,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(76,47): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(78,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(88,7): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(88,18): error TS2339: Property 'align' does not exist on type '{}'.
+components/ui/menubar.tsx(88,35): error TS2339: Property 'alignOffset' does not exist on type '{}'.
+components/ui/menubar.tsx(88,53): error TS2339: Property 'sideOffset' does not exist on type '{}'.
+components/ui/menubar.tsx(93,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(106,41): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(106,52): error TS2339: Property 'inset' does not exist on type '{}'.
+components/ui/menubar.tsx(108,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(118,49): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(118,60): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/menubar.tsx(118,70): error TS2339: Property 'checked' does not exist on type '{}'.
+components/ui/menubar.tsx(120,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(137,46): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(137,57): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/menubar.tsx(139,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(155,42): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(155,53): error TS2339: Property 'inset' does not exist on type '{}'.
+components/ui/menubar.tsx(157,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(163,46): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/menubar.tsx(165,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/menubar.tsx(172,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/navigation-menu.tsx(8,44): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/navigation-menu.tsx(8,55): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/navigation-menu.tsx(10,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLElement | null'.
+components/ui/navigation-menu.tsx(22,48): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/navigation-menu.tsx(24,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLUListElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLUListElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLUListElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLUListElement | null'.
+components/ui/navigation-menu.tsx(39,51): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/navigation-menu.tsx(39,62): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/navigation-menu.tsx(41,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLButtonElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLButtonElement | null'.
+components/ui/navigation-menu.tsx(52,51): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/navigation-menu.tsx(54,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/navigation-menu.tsx(65,52): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/navigation-menu.tsx(72,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/navigation-menu.tsx(79,53): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/navigation-menu.tsx(81,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/pagination.tsx(8,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/pagination.tsx(19,47): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/pagination.tsx(21,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLUListElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLUListElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLUListElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLUListElement | null'.
+components/ui/pagination.tsx(27,44): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/pagination.tsx(28,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLLIElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLLIElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLLIElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLLIElement | null'.
+components/ui/pagination.tsx(33,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/pagination.tsx(34,5): error TS7031: Binding element 'isActive' implicitly has an 'any' type.
+components/ui/pagination.tsx(42,13): error TS2322: Type 'string' is not assignable to type '"sm" | "lg" | "default" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined'.
+components/ui/pagination.tsx(49,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/pagination.tsx(52,6): error TS2741: Property 'isActive' is missing in type '{ children: Element[]; "aria-label": string; size: string; className: string; }' but required in type '{ [x: string]: any; className: any; isActive: any; size?: string | undefined; }'.
+components/ui/pagination.tsx(64,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/pagination.tsx(67,6): error TS2741: Property 'isActive' is missing in type '{ children: Element[]; "aria-label": string; size: string; className: string; }' but required in type '{ [x: string]: any; className: any; isActive: any; size?: string | undefined; }'.
+components/ui/pagination.tsx(79,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/popover.tsx(12,44): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/popover.tsx(12,55): error TS2339: Property 'align' does not exist on type '{}'.
+components/ui/popover.tsx(12,73): error TS2339: Property 'sideOffset' does not exist on type '{}'.
+components/ui/popover.tsx(15,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/radio-group.tsx(7,40): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/radio-group.tsx(8,90): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/radio-group.tsx(12,44): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/radio-group.tsx(15,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLButtonElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLButtonElement | null'.
+components/ui/resizable.tsx(4,37): error TS2307: Cannot find module 'react-resizable-panels' or its corresponding type declarations.
+components/ui/resizable.tsx(9,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/resizable.tsx(23,5): error TS7031: Binding element 'withHandle' implicitly has an 'any' type.
+components/ui/resizable.tsx(24,5): error TS7031: Binding element 'className' implicitly has an 'any' type.
+components/ui/scroll-area.tsx(6,40): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/scroll-area.tsx(6,51): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/scroll-area.tsx(8,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/scroll-area.tsx(20,39): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/scroll-area.tsx(20,50): error TS2339: Property 'orientation' does not exist on type '{}'.
+components/ui/scroll-area.tsx(22,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/slider.tsx(6,36): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/slider.tsx(8,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLSpanElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLSpanElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLSpanElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLSpanElement | null'.
+components/ui/sonner.tsx(2,26): error TS2307: Cannot find module 'next-themes' or its corresponding type declarations.
+components/ui/sonner.tsx(3,35): error TS2307: Cannot find module 'sonner' or its corresponding type declarations.
+components/ui/switch.tsx(6,36): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/switch.tsx(13,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLButtonElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLButtonElement | null'.
+components/ui/table.tsx(5,35): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/table.tsx(8,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLTableElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLTableElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLTableElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLTableElement | null'.
+components/ui/table.tsx(15,41): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/table.tsx(16,12): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLTableSectionElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLTableSectionElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLTableSectionElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLTableSectionElement | null'.
+components/ui/table.tsx(20,39): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/table.tsx(22,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLTableSectionElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLTableSectionElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLTableSectionElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLTableSectionElement | null'.
+components/ui/table.tsx(28,41): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/table.tsx(30,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLTableSectionElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLTableSectionElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLTableSectionElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLTableSectionElement | null'.
+components/ui/table.tsx(36,38): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/table.tsx(38,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLTableRowElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLTableRowElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLTableRowElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLTableRowElement | null'.
+components/ui/table.tsx(47,39): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/table.tsx(49,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLTableHeaderCellElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLTableHeaderCellElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLTableHeaderCellElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLTableHeaderCellElement | null'.
+components/ui/table.tsx(58,39): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/table.tsx(60,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLTableDataCellElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLTableDataCellElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLTableDataCellElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLTableDataCellElement | null'.
+components/ui/table.tsx(69,42): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/table.tsx(71,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLElement | null'.
+components/ui/toast.tsx(8,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/toast.tsx(17,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/toast.tsx(40,35): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/toast.tsx(40,46): error TS2339: Property 'variant' does not exist on type '{}'.
+components/ui/toast.tsx(43,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/toast.tsx(51,41): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/toast.tsx(53,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/toast.tsx(63,40): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/toast.tsx(65,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLButtonElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLButtonElement | null'.
+components/ui/toast.tsx(78,40): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/toast.tsx(80,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/toast.tsx(87,46): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/toast.tsx(89,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/toaster.tsx(15,10): error TS2559: Type '{ children: (Element | Element[])[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<unknown>'.
+components/ui/toaster.tsx(16,72): error TS2700: Rest types may only be created from object types.
+components/ui/toaster.tsx(20,40): error TS2559: Type '{ children: never; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<unknown>'.
+components/ui/toaster.tsx(22,34): error TS2559: Type '{ children: never; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<unknown>'.
+components/ui/toggle-group.tsx(13,41): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/toggle-group.tsx(13,52): error TS2339: Property 'variant' does not exist on type '{}'.
+components/ui/toggle-group.tsx(13,61): error TS2339: Property 'size' does not exist on type '{}'.
+components/ui/toggle-group.tsx(13,67): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/toggle-group.tsx(15,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+components/ui/toggle-group.tsx(26,45): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/toggle-group.tsx(26,56): error TS2339: Property 'children' does not exist on type '{}'.
+components/ui/toggle-group.tsx(26,66): error TS2339: Property 'variant' does not exist on type '{}'.
+components/ui/toggle-group.tsx(26,75): error TS2339: Property 'size' does not exist on type '{}'.
+components/ui/toggle-group.tsx(31,13): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLButtonElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLButtonElement | null'.
+components/ui/toggle.tsx(29,36): error TS2339: Property 'className' does not exist on type '{}'.
+components/ui/toggle.tsx(29,47): error TS2339: Property 'variant' does not exist on type '{}'.
+components/ui/toggle.tsx(29,56): error TS2339: Property 'size' does not exist on type '{}'.
+components/ui/toggle.tsx(31,9): error TS2322: Type 'ForwardedRef<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.
+    Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLButtonElement | null>'.
+      Type 'unknown' is not assignable to type 'HTMLButtonElement | null'.
+components/ui/use-toast.ts(23,27): error TS7006: Parameter 'toastId' implicitly has an 'any' type.
+components/ui/use-toast.ts(39,32): error TS7006: Parameter 'toastId' implicitly has an 'any' type.
+components/ui/use-toast.ts(47,25): error TS7006: Parameter 'state' implicitly has an 'any' type.
+components/ui/use-toast.ts(47,32): error TS7006: Parameter 'action' implicitly has an 'any' type.
+components/ui/use-toast.ts(58,43): error TS7006: Parameter 't' implicitly has an 'any' type.
+components/ui/use-toast.ts(71,39): error TS7006: Parameter 'toast' implicitly has an 'any' type.
+components/ui/use-toast.ts(78,43): error TS7006: Parameter 't' implicitly has an 'any' type.
+components/ui/use-toast.ts(97,46): error TS7006: Parameter 't' implicitly has an 'any' type.
+components/ui/use-toast.ts(102,7): error TS7034: Variable 'listeners' implicitly has type 'any[]' in some locations where its type cannot be determined.
+components/ui/use-toast.ts(106,19): error TS7006: Parameter 'action' implicitly has an 'any' type.
+components/ui/use-toast.ts(108,5): error TS7005: Variable 'listeners' implicitly has an 'any[]' type.
+components/ui/use-toast.ts(116,21): error TS7006: Parameter 'props' implicitly has an 'any' type.
+components/ui/use-toast.ts(131,28): error TS7006: Parameter 'open' implicitly has an 'any' type.
+components/ui/use-toast.ts(150,27): error TS7005: Variable 'listeners' implicitly has an 'any[]' type.
+components/ui/use-toast.ts(152,17): error TS7005: Variable 'listeners' implicitly has an 'any[]' type.
+components/ui/use-toast.ts(160,19): error TS7006: Parameter 'toastId' implicitly has an 'any' type.

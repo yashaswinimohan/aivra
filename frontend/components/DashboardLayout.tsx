@@ -7,8 +7,29 @@ import Link from "next/link";
 import Image from "next/image";
 import { User } from "firebase/auth";
 
-import { LayoutDashboard, BookOpen, PlusCircle, FlaskConical, User as UserIcon, Menu, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+    LayoutGrid,
+    BookOpen,
+    Briefcase,
+    Sparkles,
+    Trophy,
+    User as UserIcon,
+    LogOut,
+    X
+} from "lucide-react";
 
+import {
+    SidebarProvider,
+    Sidebar,
+    SidebarContent,
+    SidebarHeader,
+    SidebarFooter,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuButton,
+    SidebarTrigger,
+    SidebarInset
+} from "@/components/ui/sidebar";
 interface UserWithRole extends User {
     role?: string;
     isOnboardingComplete?: boolean;
@@ -17,7 +38,6 @@ interface UserWithRole extends User {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<UserWithRole | null>(null);
     const [loading, setLoading] = useState(true);
-    const [isCollapsed, setIsCollapsed] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
 
@@ -55,39 +75,117 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-900">Loading...</div>;
 
     return (
-        <div className="h-screen bg-slate-50 text-slate-900 flex pt-16 overflow-hidden">
-            {/* Sidebar */}
-            <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-white border-r border-slate-200 p-4 flex flex-col transition-all duration-300 ease-in-out`}>
-                <div className="flex justify-end mb-6">
-                    <button
-                        onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition"
-                    >
-                        {isCollapsed ? <ChevronRight size={20} /> : <Menu size={20} />}
-                    </button>
-                </div>
+        <SidebarProvider>
+            <div className="h-screen bg-slate-50 text-slate-900 flex overflow-hidden w-full">
+                {/* Sidebar */}
+                <Sidebar collapsible="icon" className="border-r border-slate-200 bg-white">
+                    <SidebarHeader className="h-16 flex justify-center px-4 border-b border-sidebar-border/50 group-data-[collapsible=icon]:px-2">
+                        <div className="flex items-center gap-3 w-full mt-2 group-data-[collapsible=icon]:justify-center">
+                            <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-purple-500 text-white shadow-sm">
+                                <Sparkles className="size-5" />
+                            </div>
+                            <span className="font-bold text-xl text-[#7a49e6] pb-0.5 flex-1 w-full truncate group-data-[collapsible=icon]:hidden">
+                                Aivra
+                            </span>
+                            <SidebarTrigger className="md:hidden text-slate-500 hover:text-slate-900 group-data-[collapsible=icon]:hidden">
+                                <X className="size-4" />
+                            </SidebarTrigger>
+                        </div>
+                    </SidebarHeader>
 
-                <nav className="flex-1 space-y-2">
-                    <Link href="/dashboard" className={`flex items-center gap-3 p-3 rounded-lg transition ${pathname === '/dashboard' ? 'bg-slate-900 text-white' : 'hover:bg-slate-100 text-slate-600'} ${isCollapsed ? 'justify-center' : ''}`} title="Dashboard">
-                        <LayoutDashboard size={20} />
-                        {!isCollapsed && <span>Dashboard</span>}
-                    </Link>
-                    <Link href="/dashboard/courses" className={`flex items-center gap-3 p-3 rounded-lg transition ${isActive('/dashboard/courses') ? 'bg-slate-900 text-white' : 'hover:bg-slate-100 text-slate-600'} ${isCollapsed ? 'justify-center' : ''}`} title="Courses">
-                        <BookOpen size={20} />
-                        {!isCollapsed && <span>Courses</span>}
-                    </Link>
+                    <SidebarContent className="px-3 py-6">
+                        <SidebarMenu className="gap-3">
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={pathname === '/dashboard'} tooltip="Dashboard" className="h-12 rounded-xl data-[active=true]:bg-teal-50 data-[active=true]:text-teal-700 text-slate-600 hover:bg-slate-50">
+                                    <Link href="/dashboard" className="text-[15px] font-medium">
+                                        <LayoutGrid className="size-5 mr-3" />
+                                        <span>Dashboard</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isActive('/dashboard/courses')} tooltip="Courses" className="h-12 rounded-xl data-[active=true]:bg-teal-50 data-[active=true]:text-teal-700 text-slate-600 hover:bg-slate-50">
+                                    <Link href="/dashboard/courses" className="text-[15px] font-medium">
+                                        <BookOpen className="size-5 mr-3" />
+                                        <span>Courses</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={pathname === '/dashboard/projects'} tooltip="Projects" className="h-12 rounded-xl data-[active=true]:bg-teal-50 data-[active=true]:text-teal-700 text-slate-600 hover:bg-slate-50">
+                                    <Link href="/dashboard/projects" className="text-[15px] font-medium">
+                                        <Briefcase className="size-5 mr-3" />
+                                        <span>Projects</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={pathname === '/dashboard/showcase'} tooltip="Showcase" className="h-12 rounded-xl data-[active=true]:bg-teal-50 data-[active=true]:text-teal-700 text-slate-600 hover:bg-slate-50">
+                                    <Link href="/dashboard/showcase" className="text-[15px] font-medium">
+                                        <Sparkles className="size-5 mr-3" />
+                                        <span>Showcase</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={pathname === '/dashboard/leaderboard'} tooltip="Leaderboard" className="h-12 rounded-xl data-[active=true]:bg-teal-50 data-[active=true]:text-teal-700 text-slate-600 hover:bg-slate-50">
+                                    <Link href="/dashboard/leaderboard" className="text-[15px] font-medium">
+                                        <Trophy className="size-5 mr-3" />
+                                        <span>Leaderboard</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={pathname === '/dashboard/profile'} tooltip="Profile" className="h-12 rounded-xl data-[active=true]:bg-teal-50 data-[active=true]:text-teal-700 text-slate-600 hover:bg-slate-50">
+                                    <Link href="/dashboard/profile" className="text-[15px] font-medium">
+                                        <UserIcon className="size-5 mr-3" />
+                                        <span>Profile</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarContent>
 
-                    <Link href="/dashboard/projects" className={`flex items-center gap-3 p-3 rounded-lg transition ${pathname === '/dashboard/projects' ? 'bg-slate-900 text-white' : 'hover:bg-slate-100 text-slate-600'} ${isCollapsed ? 'justify-center' : ''}`} title="Project Labs">
-                        <FlaskConical size={20} />
-                        {!isCollapsed && <span>Project Labs</span>}
-                    </Link>
-                </nav>
-            </aside>
+                    <SidebarFooter className="p-4 pb-6 mt-auto overflow-hidden group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:pb-6 group-data-[collapsible=icon]:justify-center">
+                        <div className="flex flex-col gap-4">
+                            {user && (
+                                <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 p-3 rounded-[1rem] shadow-sm group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:border-none group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none group-data-[collapsible=icon]:mx-auto">
+                                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#7a49e6] text-white font-medium text-lg">
+                                        {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || 'Y'}
+                                    </div>
+                                    <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
+                                        <span className="truncate text-sm font-semibold text-slate-900">
+                                            {user.displayName || 'Yashaswini Mohan'}
+                                        </span>
+                                        <span className="truncate text-xs text-slate-500 flex-1">
+                                            {user.email || 'yashaswinimohan@gmail.com'}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            <button
+                                onClick={() => signOut(auth).then(() => router.push('/login'))}
+                                className="flex items-center justify-center gap-2 w-full text-slate-600 hover:text-slate-900 font-semibold text-sm py-2 transition-colors mt-2"
+                            >
+                                <LogOut className="size-5 group-data-[collapsible=icon]:mx-auto" />
+                                <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>
+                            </button>
+                        </div>
+                    </SidebarFooter>
+                </Sidebar>
 
-            {/* Main Content */}
-            <main className="flex-1 p-8 overflow-y-auto">
-                {children}
-            </main>
-        </div>
+                {/* Main Content */}
+                <SidebarInset className="flex w-full flex-col bg-slate-50">
+                    <header className="flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b border-sidebar-border bg-white">
+                        <div className="flex items-center gap-2 px-2">
+                            <SidebarTrigger className="-ml-1" />
+                        </div>
+                    </header>
+                    <main className="flex-1 p-8 overflow-y-auto">
+                        {children}
+                    </main>
+                </SidebarInset>
+            </div>
+        </SidebarProvider>
     );
 }

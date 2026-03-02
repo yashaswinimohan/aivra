@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: "Learn AI through interactive courses and real-world projects.",
 };
 
-import { AuthProvider } from "../context/AuthContext";
+import { Providers } from "@/app/providers";
 import Navbar from "@/components/Navbar";
 
 export default function RootLayout({
@@ -30,10 +30,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
+        <Providers>
           <Navbar />
           {children}
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

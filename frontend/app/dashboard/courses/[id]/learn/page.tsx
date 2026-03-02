@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, FileText, Link as LinkIcon, Menu, X, CheckCircle, PlayCircle } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/lib/AuthContext";
 
 interface ChapterResource {
     id: string;

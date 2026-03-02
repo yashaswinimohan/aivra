@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Loader2, ChevronRight, Save } from "lucide-react";
 import CurriculumBuilder, { Module } from "@/components/create-course/CurriculumBuilder";
 import { useSearchParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext"; // Assuming useAuth is from this path
+import { useAuth } from "@/lib/AuthContext"; // Assuming useAuth is from this path
 
 interface Attachment {
     type: 'file' | 'url';

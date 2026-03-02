@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/lib/AuthContext";
 import { Settings, Users, FileText, ChevronLeft, Eye, EyeOff, Archive } from "lucide-react";
 
 interface Course {

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/lib/AuthContext';
 import { Button } from './ui/button';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -49,8 +49,6 @@ export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // if (pathname?.startsWith("/dashboard") || pathname?.startsWith("/onboarding")) return null; // Logic removed to keep navbar
-
     const isDashboard = pathname?.startsWith("/dashboard");
 
     const handleLogout = async () => {
@@ -73,6 +71,8 @@ export default function Navbar() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [isMenuOpen]);
+
+    if (pathname?.startsWith("/dashboard") || pathname?.startsWith("/onboarding")) return null;
 
     return (
         <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200">

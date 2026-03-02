@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { createPageUrl } from '@/lib/utils';
+import { useAuth } from "@/lib/AuthContext";
 import { Button } from '@/components/ui/button';
 import {
   BookOpen,

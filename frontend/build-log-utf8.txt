@@ -1,0 +1,252 @@
+﻿
+> frontend@0.1.0 build
+> next build
+
+node.exe : [baseline-brow
+ser-mapping] The data in 
+this module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo       
+       : NotSpe    
+cified: ([baseli    
+ne-brows...ping@    
+latest -D`:Strin    g) 
+[], RemoteExc    eption
+    + FullyQualified    
+ErrorId : Native    
+CommandError
+ 
+   Γû▓ Next.js 16.0.5 (Turbopack)
+   - Environments: .env.local, .env.production
+
+   Creating an optimized production build ...
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+ Γ£ô Compiled successfully in 2.2s
+   Running TypeScript ...
+   Collecting page data using 19 workers ...
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+ ΓÜá Using edge runtime 
+on a page currently 
+disables static 
+generation for that page
+   Generating static pages using 19 workers (0/19) ...
+[baseline-browser-mapping
+] The data in this 
+module is over two 
+months old.  To ensure 
+accurate Baseline data, 
+please update: `npm i bas
+eline-browser-mapping@lat
+est -D`
+Error occurred 
+prerendering page 
+"/dashboard/profile". 
+Read more: https://nextjs
+.org/docs/messages/preren
+der-error
+Error: No QueryClient 
+set, use 
+QueryClientProvider to 
+set one
+    at cv (C:\Work\github
+-repos\yashu\aivra\fronte
+nd\.next\server\chunks\ss
+r\[root-of-the-server]__4
+2c5cb98._.js:3:42703)
+    at <unknown> (C:\Work
+\github-repos\yashu\aivra
+\frontend\.next\server\ch
+unks\ssr\[root-of-the-ser
+ver]__42c5cb98._.js:3:430
+25)
+    at cy (C:\Work\github
+-repos\yashu\aivra\fronte
+nd\.next\server\chunks\ss
+r\[root-of-the-server]__4
+2c5cb98._.js:3:44471)
+    at G (C:\Work\github-
+repos\yashu\aivra\fronten
+d\.next\server\chunks\ssr
+\app_dashboard_profile_pa
+ge_tsx_0ff068e0._.js:1:10
+30) {
+  digest: '1989076115'
+}
+Export encountered an 
+error on 
+/dashboard/profile/page: 
+/dashboard/profile, 
+exiting the build.
+ Γ¿» Next.js build 
+worker exited with code: 
+1 and signal: null
