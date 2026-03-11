@@ -129,21 +129,14 @@ exports.joinProject = async (req, res) => {
             user_email,
             user_name: userName,
             role: role || 'Member',
+            status: 'pending', // <--- New joining flow: Requires approval
             joinedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
         const docRef = await db.collection('projectmemberships').add(membershipData);
 
-        // Update project document to include member summary for quick access
-        const projectRef = db.collection('projects').doc(project_id);
-        await projectRef.update({
-            team_members: admin.firestore.FieldValue.arrayUnion({
-                id: user_id,
-                name: userName,
-                role: role || 'Member',
-                email: user_email
-            })
-        });
+        // Do not add to project.team_members here anymore. 
+        // We will add them when the owner accepts the membership.
 
         res.status(201).json({ id: docRef.id, ...membershipData });
     } catch (error) {
@@ -172,6 +165,170 @@ exports.leaveOrRemoveProjectMember = async (req, res) => {
         }
 
         res.status(200).json({ message: 'Membership removed' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Update an existing project
+exports.updateProject = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        // Prevent updating ownerId or team_members directly through this endpoint
+        delete updates.ownerId;
+        delete updates.team_members;
+
+        const docRef = db.collection('projects').doc(id);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        if (doc.data().ownerId !== req.user.uid) {
+            return res.status(403).json({ message: 'Unauthorized to update this project' });
+        }
+
+        updates.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+        await docRef.update(updates);
+
+        res.status(200).json({ id, ...updates });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Delete a project
+exports.deleteProject = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const docRef = db.collection('projects').doc(id);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        if (doc.data().ownerId !== req.user.uid) {
+            return res.status(403).json({ message: 'Unauthorized to delete this project' });
+        }
+
+        // Delete the project
+        await docRef.delete();
+
+        // Delete associated memberships
+        const membershipsSnapshot = await db.collection('projectmemberships').where('project_id', '==', id).get();
+        const batch = db.batch();
+        membershipsSnapshot.docs.forEach(memDoc => {
+            batch.delete(memDoc.ref);
+        });
+        await batch.commit();
+
+        res.status(200).json({ message: 'Project and associated memberships deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Update membership status (Accept/Reject)
+exports.updateMembershipStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body; // 'accepted' or 'rejected'
+
+        const memRef = db.collection('projectmemberships').doc(id);
+        const memDoc = await memRef.get();
+
+        if (!memDoc.exists) {
+            return res.status(404).json({ message: 'Membership not found' });
+        }
+
+        const memData = memDoc.data();
+        const projectRef = db.collection('projects').doc(memData.project_id);
+        const projectDoc = await projectRef.get();
+
+        if (!projectDoc.exists) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        if (projectDoc.data().ownerId !== req.user.uid) {
+            return res.status(403).json({ message: 'Unauthorized to update memberships for this project' });
+        }
+
+        if (status === 'accepted') {
+            await memRef.update({ status: 'accepted' });
+            await projectRef.update({
+                team_members: admin.firestore.FieldValue.arrayUnion({
+                    id: memData.user_id,
+                    name: memData.user_name,
+                    role: memData.role,
+                    email: memData.user_email
+                })
+            });
+            res.status(200).json({ message: 'Membership accepted', id });
+        } else if (status === 'rejected') {
+            await memRef.delete();
+            res.status(200).json({ message: 'Membership rejected and deleted', id });
+        } else {
+            res.status(400).json({ message: 'Invalid status' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Invite a user to the project by email
+exports.inviteUserToProject = async (req, res) => {
+    try {
+        const { project_id, email, role } = req.body;
+
+        const projectRef = db.collection('projects').doc(project_id);
+        const projectDoc = await projectRef.get();
+
+        if (!projectDoc.exists) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        if (projectDoc.data().ownerId !== req.user.uid) {
+            return res.status(403).json({ message: 'Unauthorized to invite users to this project' });
+        }
+
+        // Find user by email
+        const userSnapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+        if (userSnapshot.empty) {
+            return res.status(404).json({ message: 'User not found with this email' });
+        }
+
+        const userDoc = userSnapshot.docs[0];
+        const userData = userDoc.data();
+        const userId = userDoc.id;
+
+        // Check if already a member or pending
+        const existingMemSnapshot = await db.collection('projectmemberships')
+            .where('project_id', '==', project_id)
+            .where('user_id', '==', userId)
+            .get();
+
+        if (!existingMemSnapshot.empty) {
+            return res.status(400).json({ message: 'User is already a member or has a pending request' });
+        }
+
+        const membershipData = {
+            project_id,
+            user_id: userId,
+            user_email: email,
+            user_name: userData.full_name || 'User',
+            role: role || 'Member',
+            status: 'invited',
+            invitedBy: req.user.uid,
+            invitedAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+
+        const memRef = await db.collection('projectmemberships').add(membershipData);
+
+        res.status(201).json({ id: memRef.id, ...membershipData, message: 'User invited successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

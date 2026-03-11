@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createPageUrl } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +20,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import {
-    User,
+    User as UserIcon,
+    LogOut,
     BookOpen,
     Briefcase,
     Edit2,
@@ -58,22 +61,24 @@ export default function Profile() {
     const [newSkill, setNewSkill] = useState('');
 
     useEffect(() => {
-        const loadUser = async () => {
-            try {
-                const response = await api.get('/users/profile');
-                setUser(response.data);
-                setEditData({
-                    first_name: response.data.first_name || response.data.firstName || '',
-                    last_name: response.data.last_name || response.data.lastName || '',
-                    bio: response.data.bio || '',
-                    roles: response.data.roles || [],
-                    skills: response.data.skills || []
-                });
-            } catch (error) {
-                console.error("Failed to load user profile:", error);
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
+            if (currentUser) {
+                try {
+                    const response = await api.get('/users/profile');
+                    setUser(response.data);
+                    setEditData({
+                        first_name: response.data.first_name || response.data.firstName || '',
+                        last_name: response.data.last_name || response.data.lastName || '',
+                        bio: response.data.bio || '',
+                        roles: response.data.roles || [],
+                        skills: response.data.skills || []
+                    });
+                } catch (error) {
+                    console.error("Failed to load user profile:", error);
+                }
             }
-        };
-        loadUser();
+        });
+        return () => unsubscribe();
     }, []);
 
     const { data: enrollments = [] } = useQuery({
@@ -463,7 +468,9 @@ export default function Profile() {
                                     {completedCourses.map((course: any) => (
                                         <div key={course.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
                                             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
-                                                <BookOpen className="w-5 h-5 text-white" />
+                                                <span className="text-white text-xl font-medium flex items-center justify-center h-full w-full">
+                                                    <UserIcon className="w-6 h-6" />
+                                                </span>
                                             </div>
                                             <div className="flex-1">
                                                 <p className="font-medium text-slate-900">{course.title}</p>

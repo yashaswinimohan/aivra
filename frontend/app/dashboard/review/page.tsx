@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createPageUrl } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import {
     ClipboardCheck,
-    User,
+    User as UserIcon,
     Calendar,
     BookOpen,
     ArrowLeft,
@@ -46,15 +48,17 @@ export default function SubmissionReviewPage() {
     const queryClient = useQueryClient();
 
     useEffect(() => {
-        const loadUser = async () => {
-            try {
-                const response = await api.get('/users/profile');
-                setUser(response.data);
-            } catch (error) {
-                console.error("Failed to load user profile:", error);
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
+            if (currentUser) {
+                try {
+                    const response = await api.get('/users/profile');
+                    setUser(response.data);
+                } catch (error) {
+                    console.error("Failed to load user profile:", error);
+                }
             }
-        };
-        loadUser();
+        });
+        return () => unsubscribe();
     }, []);
 
     const { data: submissions = [], isLoading } = useQuery({
@@ -168,7 +172,7 @@ export default function SubmissionReviewPage() {
                                                 <h3 className="font-semibold text-slate-900">{submission.title}</h3>
                                                 <div className="flex items-center gap-4 text-sm text-slate-500 mt-0.5">
                                                     <span className="flex items-center gap-1">
-                                                        <User className="w-3.5 h-3.5" />
+                                                        <UserIcon className="w-3.5 h-3.5" />
                                                         {submission.user_name}
                                                     </span>
                                                     <span className="flex items-center gap-1">

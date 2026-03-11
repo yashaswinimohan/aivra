@@ -9,6 +9,12 @@ router.get('/', verifyToken, projectController.getProjectMemberships);
 // Join project
 router.post('/', verifyToken, projectController.joinProject);
 
+// Invite user to project
+router.post('/invite', verifyToken, projectController.inviteUserToProject);
+
+// Update membership status (Accept/Reject)
+router.put('/:id', verifyToken, projectController.updateMembershipStatus);
+
 // Leave/remove from project
 router.delete('/:id', verifyToken, projectController.leaveOrRemoveProjectMember);
 

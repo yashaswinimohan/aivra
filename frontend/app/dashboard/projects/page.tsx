@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createPageUrl } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,15 +47,17 @@ export default function Projects() {
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        const loadUser = async () => {
-            try {
-                const response = await api.get('/users/profile');
-                setUser(response.data);
-            } catch (error) {
-                console.error("Failed to load user profile:", error);
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
+            if (currentUser) {
+                try {
+                    const response = await api.get('/users/profile');
+                    setUser(response.data);
+                } catch (error) {
+                    console.error("Failed to load user profile:", error);
+                }
             }
-        };
-        loadUser();
+        });
+        return () => unsubscribe();
     }, []);
 
     const { data: projects = [], isLoading } = useQuery({

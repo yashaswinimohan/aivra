@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import DashboardLayout from '@/components/DashboardLayout';
 import { useSearchParams } from 'next/navigation';
 import { createPageUrl } from '@/lib/utils';
 import { api } from '@/lib/api';
@@ -45,7 +46,9 @@ import {
     CheckCircle2,
     Circle,
     LogOut,
-    UserPlus
+    UserPlus,
+    Settings,
+    Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -68,9 +71,11 @@ const fileTypeIcons: Record<string, string> = {
 
 export default function ProjectWorkspacePage() {
     return (
-        <Suspense fallback={<div className="max-w-6xl mx-auto"><Skeleton className="h-8 w-32 mb-6" /><Skeleton className="h-64 rounded-2xl" /></div>}>
-            <ProjectWorkspace />
-        </Suspense>
+        <DashboardLayout>
+            <Suspense fallback={<div className="max-w-6xl mx-auto"><Skeleton className="h-8 w-32 mb-6" /><Skeleton className="h-64 rounded-2xl" /></div>}>
+                <ProjectWorkspace />
+            </Suspense>
+        </DashboardLayout>
     );
 }
 
@@ -85,7 +90,8 @@ function ProjectWorkspace() {
     const [newFile, setNewFile] = useState({ name: '', type: 'Doc', url: '' });
     const [showJoinDialog, setShowJoinDialog] = useState(false);
     const [selectedRole, setSelectedRole] = useState('');
-
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteRole, setInviteRole] = useState('');
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
@@ -137,8 +143,55 @@ function ProjectWorkspace() {
         enabled: !!user?.email,
     });
 
-    const isMember = memberships.some((m: any) => m.project_id === projectId);
-    const isOwner = user?.uid === project?.ownerId;
+    const isMember = memberships.some((m: any) => m.project_id === projectId && m.status !== 'pending' && m.status !== 'invited');
+    const pendingMembership = memberships.find((m: any) => m.project_id === projectId && m.status === 'pending');
+    const isOwner = user?.id === project?.ownerId || user?.uid === project?.ownerId;
+
+    const { data: projectMemberships = [] } = useQuery({
+        queryKey: ['project_pending_memberships', projectId],
+        queryFn: async () => (await api.get('/projectmemberships')).data.filter((m: any) => m.project_id === projectId),
+        enabled: !!projectId && !!isOwner,
+    });
+    const pendingRequests = projectMemberships.filter((m: any) => m.status === 'pending');
+
+    // Parse project roles for invites
+    const parsedRoles = (project?.roles_needed || []).map((r: string) => {
+        const match = r.match(/^(\d+)\s*x\s*(.+)$/);
+        return match ? { count: parseInt(match[1]), role: match[2].trim() } : { count: 1, role: r.trim() };
+    });
+
+    useEffect(() => {
+        if (parsedRoles.length > 0 && !inviteRole) {
+            setInviteRole(parsedRoles[0].role);
+        }
+    }, [project, parsedRoles, inviteRole]);
+    const updateMemberStatusMutation = useMutation({
+        mutationFn: async ({ membershipId, status }: { membershipId: string, status: string }) => {
+            return api.put(`/projectmemberships/${membershipId}`, { status });
+        },
+        onSuccess: () => {
+            refetchProject();
+            queryClient.invalidateQueries({ queryKey: ['project_pending_memberships'] });
+        }
+    });
+
+    const inviteMemberMutation = useMutation({
+        mutationFn: async () => {
+            return api.post('/projectmemberships/invite', {
+                project_id: projectId,
+                email: inviteEmail,
+                role: inviteRole
+            });
+        },
+        onSuccess: () => {
+            setInviteEmail('');
+            queryClient.invalidateQueries({ queryKey: ['project_pending_memberships'] });
+            alert('User invited successfully');
+        },
+        onError: (err: any) => {
+            alert(err.response?.data?.message || 'Failed to invite user');
+        }
+    });
 
     const joinMutation = useMutation({
         mutationFn: async () => {
@@ -165,27 +218,6 @@ function ProjectWorkspace() {
             queryClient.invalidateQueries({ queryKey: ['memberships'] });
             refetchProject();
         },
-    });
-
-    const removeMemberMutation = useMutation({
-        mutationFn: async (memberId: string) => {
-            // Find the membership for this specific user in the current project
-            // This is slightly complex since we need the membership ID, not the user ID.
-            // A more robust implementation would fetch the project's memberships first, 
-            // but for now, we'll assume the API will handle finding it by project_id + user_id or we adjust.
-            // For this quick prototype layout update, we'll pretend we just call delete on the memberId
-            // In a real app we'd have a specific endpoint or send both IDs.
-            // Let's assume the API expects the user_id to be removed loosely right now if we pass it,
-            // Wait, we need the exact membership ID. Let's send a custom request payload to the general endpoint
-            // or we'll just show the UI for now. 
-            // *Update based on backend implementation: DELETE /projectmemberships/:id takes membership ID.
-            // We only have member.id (which is user_id) in project.team_members. We'd have to find it.
-            // To simplify, let's just alert for now since the user only asked for POV.
-            alert("Remove member logic requires fetching all mems for project first to get membership ID");
-        },
-        onSuccess: () => {
-            refetchProject();
-        }
     });
 
     const updateTaskMutation = useMutation({
@@ -237,7 +269,7 @@ function ProjectWorkspace() {
         return (
             <div className="max-w-6xl mx-auto text-center py-16">
                 <h2 className="text-xl font-semibold text-slate-900 mb-4">Project not found</h2>
-                <Link href={createPageUrl('Projects')}>
+                <Link href={createPageUrl('/dashboard/projects')}>
                     <Button>Back to Projects</Button>
                 </Link>
             </div>
@@ -249,7 +281,7 @@ function ProjectWorkspace() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-4">
-                    <Link href={createPageUrl('Projects')}>
+                    <Link href={createPageUrl('/dashboard/projects')}>
                         <Button variant="ghost" size="icon" className="shrink-0">
                             <ArrowLeft className="w-5 h-5" />
                         </Button>
@@ -268,13 +300,12 @@ function ProjectWorkspace() {
                 </div>
 
                 {isOwner ? (
-                    <Button
-                        variant="default"
-                        className="bg-slate-900 hover:bg-slate-800"
-                        onClick={() => alert("Edit Project details functionality coming soon.")}
-                    >
-                        Edit Details
-                    </Button>
+                    <Link href={createPageUrl(`/dashboard/project-settings?id=${projectId}`)}>
+                        <Button variant="default" className="bg-slate-900 hover:bg-slate-800">
+                            <Settings className="w-4 h-4 mr-2" />
+                            Project Settings
+                        </Button>
+                    </Link>
                 ) : isMember ? (
                     <Button
                         variant="outline"
@@ -331,19 +362,19 @@ function ProjectWorkspace() {
                         <Sparkles className="w-4 h-4" />
                         Overview
                     </TabsTrigger>
-                    <TabsTrigger value="tasks" className="rounded-lg data-[state=active]:bg-slate-100 gap-2">
+                    <TabsTrigger value="tasks" disabled={!isMember && !isOwner} className="rounded-lg data-[state=active]:bg-slate-100 gap-2 disabled:opacity-50">
                         <CheckSquare className="w-4 h-4" />
                         Tasks
                     </TabsTrigger>
-                    <TabsTrigger value="chat" className="rounded-lg data-[state=active]:bg-slate-100 gap-2">
+                    <TabsTrigger value="chat" disabled={!isMember && !isOwner} className="rounded-lg data-[state=active]:bg-slate-100 gap-2 disabled:opacity-50">
                         <MessageSquare className="w-4 h-4" />
                         Chat
                     </TabsTrigger>
-                    <TabsTrigger value="files" className="rounded-lg data-[state=active]:bg-slate-100 gap-2">
+                    <TabsTrigger value="files" disabled={!isMember && !isOwner} className="rounded-lg data-[state=active]:bg-slate-100 gap-2 disabled:opacity-50">
                         <FolderOpen className="w-4 h-4" />
                         Files
                     </TabsTrigger>
-                    <TabsTrigger value="progress" className="rounded-lg data-[state=active]:bg-slate-100 gap-2">
+                    <TabsTrigger value="progress" disabled={!isMember && !isOwner} className="rounded-lg data-[state=active]:bg-slate-100 gap-2 disabled:opacity-50">
                         <TrendingUp className="w-4 h-4" />
                         Progress
                     </TabsTrigger>
@@ -525,21 +556,95 @@ function ProjectWorkspace() {
                                                     </div>
                                                 </div>
 
-                                                {isOwner && member.id !== project.ownerId && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-red-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 h-8 px-2"
-                                                        onClick={() => removeMemberMutation.mutate(member.id)}
-                                                    >
-                                                        Remove
-                                                    </Button>
-                                                )}
+
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
                                     <p className="text-sm text-slate-500 text-center py-4">No team members yet</p>
+                                )}
+
+                                {/* Pending Requests */}
+                                {isOwner && pendingRequests.length > 0 && (
+                                    <div className="space-y-3 pt-4 mt-4 border-t border-slate-100">
+                                        <h4 className="font-medium text-sm text-slate-700 leading-none">Pending Join Requests</h4>
+                                        <div className="grid gap-3 max-h-[300px] overflow-y-auto pr-1 pb-1 mt-2">
+                                            {pendingRequests.map((req: any) => (
+                                                <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-slate-900 line-clamp-1">{req.user_name}</p>
+                                                        <p className="text-xs text-slate-500 mt-1">Role: <Badge variant="secondary" className="ml-1 text-[10px]">{req.role}</Badge></p>
+                                                    </div>
+                                                    <div className="flex gap-2 shrink-0">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 h-8 text-xs"
+                                                            onClick={() => updateMemberStatusMutation.mutate({ membershipId: req.id, status: 'rejected' })}
+                                                        >
+                                                            Reject
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            className="bg-purple-600 hover:bg-purple-700 h-8 text-xs"
+                                                            onClick={() => updateMemberStatusMutation.mutate({ membershipId: req.id, status: 'accepted' })}
+                                                        >
+                                                            Accept
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Invite Users Dialog */}
+                                {isOwner && (
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" className="w-full mt-4 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors">
+                                                <UserPlus className="w-4 h-4 mr-2" />
+                                                Invite Users
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-md md:max-w-lg">
+                                            <DialogHeader>
+                                                <DialogTitle>Invite Users</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-6 pt-4">
+                                                {/* Invite User */}
+                                                <div className="space-y-3">
+                                                    <h4 className="font-medium text-sm text-slate-700 leading-none">Invite User by Email</h4>
+                                                    <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                                                        <Input
+                                                            placeholder="User Email address"
+                                                            value={inviteEmail}
+                                                            onChange={(e) => setInviteEmail(e.target.value)}
+                                                            className="flex-1"
+                                                        />
+                                                        <Select value={inviteRole} onValueChange={setInviteRole}>
+                                                            <SelectTrigger className="w-[140px]">
+                                                                <SelectValue placeholder="Select role" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {parsedRoles.map((r: any) => (
+                                                                    <SelectItem key={r.role} value={r.role}>{r.role}</SelectItem>
+                                                                ))}
+                                                                <SelectItem value="Member">Member</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <Button
+                                                            className="sm:w-32 bg-slate-900 hover:bg-slate-800 shrink-0"
+                                                            onClick={() => inviteMemberMutation.mutate()}
+                                                            disabled={!inviteEmail || inviteMemberMutation.isPending}
+                                                        >
+                                                            Send Invite
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
                                 )}
                             </CardContent>
                         </Card>

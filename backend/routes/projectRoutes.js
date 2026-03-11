@@ -6,10 +6,16 @@ const verifyToken = require('../middleware/authMiddleware');
 // Get all projects
 router.get('/', projectController.getAllProjects);
 
-// Create a project (Requires authentication, but anyone can create, no extra role check needed)
+// Create a project (Requires authentication)
 router.post('/', verifyToken, projectController.createProject);
 
 // Get single project
 router.get('/:id', projectController.getProjectById);
+
+// Update a project
+router.put('/:id', verifyToken, projectController.updateProject);
+
+// Delete a project
+router.delete('/:id', verifyToken, projectController.deleteProject);
 
 module.exports = router;
