@@ -29,7 +29,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Loader2, Plus, X, Minus, Check, Trash2, Settings, Users, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, X, Minus, Check, Trash2, Settings, Users, FolderOpen, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -99,6 +99,11 @@ function ProjectSettingsContent() {
     });
 
     const isOwner = user && (user.id === project?.ownerId || user.uid === project?.ownerId);
+    
+    // Check if the user is at least a member (including pending or accepted)
+    // We fetch memberships lower down, but need an initial member check for basic access
+    // `project.team_members` has accepted members
+    const isMember = user && project?.team_members?.some((m: any) => m.id === user.id || m.id === user.uid);
 
     // Settings State
     const [settingsTab, setSettingsTab] = useState('general');
@@ -157,13 +162,18 @@ function ProjectSettingsContent() {
             if (parsedRoles.length > 0 && !inviteRole) {
                 setInviteRole(parsedRoles[0].role);
             }
+            
+            // Default tab for non-owners should be the danger zone
+            if (user && !(user.id === project.ownerId || user.uid === project.ownerId)) {
+                setSettingsTab('danger');
+            }
         }
-    }, [project]);
+    }, [project, user]);
 
     // Pending Memberships
     const { data: projectMemberships = [], refetch: refetchProjectMemberships } = useQuery({
         queryKey: ['project_pending_memberships', projectId],
-        queryFn: async () => (await api.get('/projectmemberships')).data.filter((m: any) => m.project_id === projectId),
+        queryFn: async () => (await api.get('/projectmemberships', { params: { project_id: projectId } })).data,
         enabled: !!projectId && !!isOwner,
     });
     const pendingRequests = projectMemberships.filter((m: any) => m.status === 'pending');
@@ -198,9 +208,23 @@ function ProjectSettingsContent() {
         }
     });
 
+    const leaveMutation = useMutation({
+        mutationFn: async () => {
+            return api.delete(`/projectmemberships/${projectId}/leave`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['projects'] });
+            router.push(createPageUrl('/dashboard/projects'));
+        },
+        onError: (error) => {
+            console.error("Failed to leave project:", error);
+            alert("Error leaving project. Please try again.");
+        }
+    });
+
     const updateMemberStatusMutation = useMutation({
         mutationFn: async ({ membershipId, status }: { membershipId: string, status: string }) => {
-            return api.put(`/projectmemberships/${membershipId}`, { status });
+            return api.put(`/projectmemberships/${projectId}/${membershipId}`, { status });
         },
         onSuccess: () => {
             refetchProject();
@@ -229,7 +253,7 @@ function ProjectSettingsContent() {
         mutationFn: async (memberId: string) => {
             const membership = projectMemberships.find((m: any) => m.user_id === memberId);
             if (membership) {
-                return (await api.delete(`/projectmemberships/${membership.id}`)).data;
+                return (await api.delete(`/projectmemberships/${projectId}/${membership.id}`)).data;
             } else {
                 throw new Error("Membership not found");
             }
@@ -336,11 +360,11 @@ function ProjectSettingsContent() {
         );
     }
 
-    if (!isOwner) {
+    if (!isOwner && !isMember) {
         return (
             <div className="max-w-4xl mx-auto py-16 text-center">
                 <h2 className="text-xl font-semibold text-slate-900 mb-4">Unauthorized Access</h2>
-                <p className="text-slate-600 mb-6">You must be the project owner to view and edit settings.</p>
+                <p className="text-slate-600 mb-6">You must be a project member to view settings.</p>
                 <Link href={createPageUrl(`/dashboard/project-workspace?id=${projectId}`)}>
                     <Button>Back to Project Workspace</Button>
                 </Link>
@@ -370,22 +394,26 @@ function ProjectSettingsContent() {
                 <Tabs value={settingsTab} onValueChange={setSettingsTab} orientation="vertical" className="flex flex-col md:flex-row min-h-[600px]">
                     <div className="md:w-64 border-b md:border-b-0 md:border-r border-slate-100 p-4 shrink-0">
                         <TabsList className="flex md:flex-col w-full bg-transparent h-auto gap-1">
-                            <TabsTrigger value="general" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
-                                <Settings className="w-4 h-4 mr-2" />
-                                General Information
-                            </TabsTrigger>
-                            <TabsTrigger value="tags_roles" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
-                                <Users className="w-4 h-4 mr-2" />
-                                Tags & Roles
-                            </TabsTrigger>
-                            <TabsTrigger value="resources" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
-                                <FolderOpen className="w-4 h-4 mr-2" />
-                                Resources
-                            </TabsTrigger>
-                            <TabsTrigger value="team" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
-                                <Users className="w-4 h-4 mr-2" />
-                                User Control
-                            </TabsTrigger>
+                            {isOwner && (
+                                <>
+                                    <TabsTrigger value="general" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
+                                        <Settings className="w-4 h-4 mr-2" />
+                                        General Information
+                                    </TabsTrigger>
+                                    <TabsTrigger value="tags_roles" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
+                                        <Users className="w-4 h-4 mr-2" />
+                                        Tags & Roles
+                                    </TabsTrigger>
+                                    <TabsTrigger value="resources" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
+                                        <FolderOpen className="w-4 h-4 mr-2" />
+                                        Resources
+                                    </TabsTrigger>
+                                    <TabsTrigger value="team" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
+                                        <Users className="w-4 h-4 mr-2" />
+                                        User Control
+                                    </TabsTrigger>
+                                </>
+                            )}
                             <TabsTrigger value="danger" className="w-full justify-start data-[state=active]:bg-red-50 text-red-600 hover:text-red-700 rounded-lg px-3 py-2.5">
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Danger Zone
@@ -891,22 +919,46 @@ function ProjectSettingsContent() {
                         <TabsContent value="danger" className="m-0 space-y-4">
                             <h3 className="text-lg font-semibold text-red-600 border-b border-red-100 pb-4 mb-4">Danger Zone</h3>
                             <div className="p-6 border border-red-200 bg-red-50 rounded-xl">
-                                <h4 className="font-semibold text-red-900 mb-2">Delete this project</h4>
-                                <p className="text-sm text-red-700 mb-6">
-                                    Once you delete a project, there is no going back. All data, tasks, and files will be permanently removed. Please be certain.
-                                </p>
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => {
-                                        if (confirm("Are you absolutely sure you want to delete this project? This action cannot be undone.")) {
-                                            deleteProjectMutation.mutate();
-                                        }
-                                    }}
-                                    disabled={deleteProjectMutation.isPending}
-                                >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete Project Permanently
-                                </Button>
+                                {isOwner ? (
+                                    <>
+                                        <h4 className="font-semibold text-red-900 mb-2">Delete this project</h4>
+                                        <p className="text-sm text-red-700 mb-6">
+                                            Once you delete a project, there is no going back. All data, tasks, and files will be permanently removed. Please be certain.
+                                        </p>
+                                        <Button
+                                            variant="destructive"
+                                            onClick={() => {
+                                                if (confirm("Are you absolutely sure you want to delete this project? This action cannot be undone.")) {
+                                                    deleteProjectMutation.mutate();
+                                                }
+                                            }}
+                                            disabled={deleteProjectMutation.isPending}
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Delete Project Permanently
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h4 className="font-semibold text-red-900 mb-2">Leave this project</h4>
+                                        <p className="text-sm text-red-700 mb-6">
+                                            If you leave this project, you will lose access to its workspace, tasks, and internal resources.
+                                        </p>
+                                        <Button
+                                            variant="outline"
+                                            className="text-red-700 border-red-200 hover:bg-red-100 bg-white"
+                                            onClick={() => {
+                                                if (confirm("Are you sure you want to leave this project?")) {
+                                                    leaveMutation.mutate();
+                                                }
+                                            }}
+                                            disabled={leaveMutation.isPending}
+                                        >
+                                            <LogOut className="w-4 h-4 mr-2" />
+                                            Leave Project
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         </TabsContent>
                     </div>

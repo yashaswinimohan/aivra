@@ -6,8 +6,9 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { useSearchParams } from 'next/navigation';
 import { createPageUrl } from '@/lib/utils';
 import { api } from '@/lib/api';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,10 +89,15 @@ function ProjectWorkspace() {
     const [newMessage, setNewMessage] = useState('');
     const [showAddFile, setShowAddFile] = useState(false);
     const [newFile, setNewFile] = useState({ name: '', type: 'Doc', url: '' });
+    const [showAddMilestone, setShowAddMilestone] = useState(false);
+    const [newMilestone, setNewMilestone] = useState({ title: '', objective: '', startDate: '', date: '', deliverables: [{ text: '', completed: false }] });
     const [showJoinDialog, setShowJoinDialog] = useState(false);
+    const [showInviteDialog, setShowInviteDialog] = useState(false);
     const [selectedRole, setSelectedRole] = useState('');
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState('');
+    const [newTask, setNewTask] = useState({ title: '', deadline: '', assignee: '', priority: 'medium', milestone_id: '', status: 'todo' });
+    const [showAddTask, setShowAddTask] = useState(false);
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
@@ -121,15 +127,37 @@ function ProjectWorkspace() {
 
     const { data: tasks = [] } = useQuery({
         queryKey: ['tasks', projectId],
-        queryFn: async () => (await api.get('/tasks', { params: { project_id: projectId } })).data,
+        queryFn: async () => (await api.get(`/projecttasks?project_id=${projectId}`)).data,
         enabled: !!projectId,
     });
 
-    const { data: messages = [] } = useQuery({
-        queryKey: ['messages', projectId],
-        queryFn: async () => (await api.get('/projectmessages', { params: { project_id: projectId, _sort: '-created_date' } })).data,
-        enabled: !!projectId,
-    });
+    const [messages, setMessages] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (!projectId) return;
+
+        const unsubscribe = onSnapshot(
+            query(collection(db, `${projectId}_messages`), orderBy('created_date', 'asc')),
+            (snapshot) => {
+                const fetchedMessages = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setMessages(fetchedMessages);
+                
+                // Auto scroll to bottom
+                setTimeout(() => {
+                    const bottomRef = document.getElementById('chat-bottom-ref');
+                    bottomRef?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            },
+            (error) => {
+                console.error("Error getting messages:", error);
+            }
+        );
+
+        return () => unsubscribe();
+    }, [projectId]);
 
     const { data: files = [] } = useQuery({
         queryKey: ['files', projectId],
@@ -137,19 +165,29 @@ function ProjectWorkspace() {
         enabled: !!projectId,
     });
 
+    const { data: milestones = [] } = useQuery({
+        queryKey: ['milestones', projectId],
+        queryFn: async () => (await api.get(`/projectmilestones?project_id=${projectId}`)).data,
+        enabled: !!projectId,
+    });
+
+    const completedMilestones = milestones?.filter((m: any) => m.completed).length || 0;
+    const totalMilestones = milestones?.length || 0;
+    const calculatedProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+
     const { data: memberships = [] } = useQuery({
         queryKey: ['memberships', user?.email],
         queryFn: async () => (await api.get('/projectmemberships', { params: { user_email: user?.email } })).data,
         enabled: !!user?.email,
     });
 
-    const isMember = memberships.some((m: any) => m.project_id === projectId && m.status !== 'pending' && m.status !== 'invited');
+    const isMember = user && project?.team_members?.some((m: any) => m.id === user.id || m.id === user.uid);
     const pendingMembership = memberships.find((m: any) => m.project_id === projectId && m.status === 'pending');
     const isOwner = user?.id === project?.ownerId || user?.uid === project?.ownerId;
 
     const { data: projectMemberships = [] } = useQuery({
         queryKey: ['project_pending_memberships', projectId],
-        queryFn: async () => (await api.get('/projectmemberships')).data.filter((m: any) => m.project_id === projectId),
+        queryFn: async () => (await api.get('/projectmemberships', { params: { project_id: projectId } })).data,
         enabled: !!projectId && !!isOwner,
     });
     const pendingRequests = projectMemberships.filter((m: any) => m.status === 'pending');
@@ -167,7 +205,7 @@ function ProjectWorkspace() {
     }, [project, parsedRoles, inviteRole]);
     const updateMemberStatusMutation = useMutation({
         mutationFn: async ({ membershipId, status }: { membershipId: string, status: string }) => {
-            return api.put(`/projectmemberships/${membershipId}`, { status });
+            return api.put(`/projectmemberships/${projectId}/${membershipId}`, { status });
         },
         onSuccess: () => {
             refetchProject();
@@ -186,6 +224,7 @@ function ProjectWorkspace() {
         onSuccess: () => {
             setInviteEmail('');
             queryClient.invalidateQueries({ queryKey: ['project_pending_memberships'] });
+            setShowInviteDialog(false);
             alert('User invited successfully');
         },
         onError: (err: any) => {
@@ -211,8 +250,9 @@ function ProjectWorkspace() {
         mutationFn: async () => {
             const membership = memberships.find((m: any) => m.project_id === projectId);
             if (membership) {
-                return (await api.delete(`/projectmemberships/${membership.id}`)).data;
+                return (await api.delete(`/projectmemberships/${projectId}/${membership.id}`)).data;
             }
+            throw new Error("Membership not found");
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['memberships'] });
@@ -220,8 +260,24 @@ function ProjectWorkspace() {
         },
     });
 
+    const addTaskMutation = useMutation({
+        mutationFn: () => api.post('/projecttasks', {
+            project_id: projectId,
+            ...newTask
+        }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+            setShowAddTask(false);
+            setNewTask({ title: '', deadline: '', assignee: '', priority: 'medium', milestone_id: '', status: 'todo' });
+        },
+        onError: (error: any) => {
+            console.error("Failed to add task:", error);
+            alert("Error adding task: " + (error.response?.data?.message || error.message));
+        }
+    });
+
     const updateTaskMutation = useMutation({
-        mutationFn: async ({ taskId, status }: { taskId: string, status: string }) => (await api.put(`/tasks/${taskId}`, { status })).data,
+        mutationFn: async ({ taskId, updates }: { taskId: string, updates: any }) => (await api.put(`/projecttasks/${taskId}?project_id=${projectId}`, updates)).data,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }),
     });
 
@@ -248,6 +304,36 @@ function ProjectWorkspace() {
             setShowAddFile(false);
             setNewFile({ name: '', type: 'Doc', url: '' });
         },
+    });
+
+    const addMilestoneMutation = useMutation({
+        mutationFn: () => {
+            const cleanDeliverables = newMilestone.deliverables.filter(d => d.text.trim() !== '');
+            return api.post('/projectmilestones', {
+                project_id: projectId,
+                ...newMilestone,
+                deliverables: cleanDeliverables
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['milestones', projectId] });
+            queryClient.invalidateQueries({ queryKey: ['project', projectId] }); // in case progress calculation needs it later
+            setShowAddMilestone(false);
+            setNewMilestone({ title: '', objective: '', startDate: '', date: '', deliverables: [{ text: '', completed: false }] });
+        },
+        onError: (error: any) => {
+            console.error("Failed to add milestone:", error);
+            alert("Error adding milestone: " + (error.response?.data?.message || error.message));
+        }
+    });
+
+    const updateMilestoneMutation = useMutation({
+        mutationFn: async ({ milestoneId, updates }: { milestoneId: string, updates: any }) => {
+            return api.put(`/projectmilestones/${milestoneId}?project_id=${projectId}`, updates);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['milestones', projectId] });
+        }
     });
 
     const groupedTasks: Record<string, any[]> = {
@@ -299,34 +385,76 @@ function ProjectWorkspace() {
                     </div>
                 </div>
 
-                {isOwner ? (
-                    <Link href={createPageUrl(`/dashboard/project-settings?id=${projectId}`)}>
-                        <Button variant="default" className="bg-slate-900 hover:bg-slate-800">
-                            <Settings className="w-4 h-4 mr-2" />
-                            Project Settings
-                        </Button>
-                    </Link>
-                ) : isMember ? (
-                    <Button
-                        variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                        onClick={() => leaveMutation.mutate()}
-                        disabled={leaveMutation.isPending}
-                    >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Leave Project
+                {(isOwner || isMember) ? (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="text-slate-700">
+                                    <UserPlus className="w-4 h-4 mr-2" />
+                                    Invite
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Invite a Teammate</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Email Address</label>
+                                        <Input
+                                            placeholder="colleague@example.com"
+                                            value={inviteEmail}
+                                            onChange={(e) => setInviteEmail(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Role</label>
+                                        <Select value={inviteRole} onValueChange={setInviteRole}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select role" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {parsedRoles.map((r: any) => (
+                                                    <SelectItem key={r.role} value={r.role}>{r.role}</SelectItem>
+                                                ))}
+                                                <SelectItem value="Member">Member</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <Button
+                                        className="w-full bg-purple-600 hover:bg-purple-700"
+                                        onClick={() => inviteMemberMutation.mutate()}
+                                        disabled={!inviteEmail || inviteMemberMutation.isPending}
+                                    >
+                                        {inviteMemberMutation.isPending ? 'Sending...' : 'Send Invite'}
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+
+                        <Link href={createPageUrl(`/dashboard/project-settings?id=${projectId}`)}>
+                            <Button variant="default" className="bg-slate-900 hover:bg-slate-800 w-full sm:w-auto">
+                                <Settings className="w-4 h-4 mr-2" />
+                                Project Settings
+                            </Button>
+                        </Link>
+                    </div>
+                ) : pendingMembership ? (
+                    <Button disabled variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">
+                        <Clock className="w-4 h-4 mr-2" />
+                        Request Sent (Pending)
                     </Button>
                 ) : (
                     <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
                         <DialogTrigger asChild>
                             <Button className="bg-purple-600 hover:bg-purple-700">
                                 <UserPlus className="w-4 h-4 mr-2" />
-                                Join Project
+                                Request to Join
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Join Project</DialogTitle>
+                                <DialogTitle>Request to Join Project</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 py-4">
                                 <div>
@@ -336,9 +464,11 @@ function ProjectWorkspace() {
                                             <SelectValue placeholder="Choose a role" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {project.roles_needed?.map((role: string) => (
-                                                <SelectItem key={role} value={role}>{role}</SelectItem>
-                                            ))}
+                                            {project.roles_needed?.map((rawRole: string) => {
+                                                const match = rawRole.match(/^(\d+)\s*x\s*(.+)$/);
+                                                const roleName = match ? match[2].trim() : rawRole.trim();
+                                                return <SelectItem key={rawRole} value={roleName}>{roleName}</SelectItem>;
+                                            })}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -347,7 +477,7 @@ function ProjectWorkspace() {
                                     onClick={() => joinMutation.mutate()}
                                     disabled={!selectedRole || joinMutation.isPending}
                                 >
-                                    {joinMutation.isPending ? 'Joining...' : 'Confirm & Join'}
+                                    {joinMutation.isPending ? 'Sending Request...' : 'Send Request'}
                                 </Button>
                             </div>
                         </DialogContent>
@@ -653,45 +783,139 @@ function ProjectWorkspace() {
 
                 {/* Tasks Tab - Kanban */}
                 <TabsContent value="tasks" className="mt-0">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-lg font-semibold text-slate-900">Project Board</h2>
+                        <Dialog open={showAddTask} onOpenChange={setShowAddTask}>
+                            <DialogTrigger asChild>
+                                <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    Add Task
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle>Add New Task</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div>
+                                        <label className="text-sm font-medium text-slate-700 mb-2 block">Title</label>
+                                        <Input
+                                            value={newTask.title}
+                                            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                                            placeholder="e.g. Design Landing Page"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-slate-700 mb-2 block">Assignee</label>
+                                            <Select value={newTask.assignee} onValueChange={(value) => setNewTask({ ...newTask, assignee: value })}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select team member" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Unassigned">Unassigned</SelectItem>
+                                                    {project?.team_members?.map((member: any) => (
+                                                        <SelectItem key={member.email || member.name} value={member.name}>
+                                                            {member.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-slate-700 mb-2 block">Priority</label>
+                                            <Select value={newTask.priority} onValueChange={(value) => setNewTask({ ...newTask, priority: value })}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="low">Low</SelectItem>
+                                                    <SelectItem value="medium">Medium</SelectItem>
+                                                    <SelectItem value="high">High</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-slate-700 mb-2 block">Deadline</label>
+                                            <Input
+                                                type="date"
+                                                value={newTask.deadline}
+                                                onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-slate-700 mb-2 block">Milestone</label>
+                                            <Select value={newTask.milestone_id} onValueChange={(value) => setNewTask({ ...newTask, milestone_id: value })}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select milestone" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">None</SelectItem>
+                                                    {milestones?.map((m: any) => (
+                                                        <SelectItem key={m.id} value={m.id}>
+                                                            {m.title}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        className="w-full bg-purple-600 hover:bg-purple-700"
+                                        onClick={() => addTaskMutation.mutate()}
+                                        disabled={!newTask.title || addTaskMutation.isPending}
+                                    >
+                                        Create Task
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+
                     <div className="grid md:grid-cols-3 gap-4">
                         {['todo', 'in_progress', 'done'].map((status) => (
-                            <div key={status} className="bg-slate-50 rounded-2xl p-4">
+                            <div key={status} className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100 min-h-[500px]">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="font-semibold text-slate-700 capitalize">
-                                        {status.replace('_', ' ')}
-                                    </h3>
-                                    <Badge variant="secondary" className="bg-white">
-                                        {groupedTasks[status].length}
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${status === 'todo' ? 'bg-slate-400' :
+                                                status === 'in_progress' ? 'bg-blue-500' :
+                                                    'bg-emerald-500'
+                                            }`} />
+                                        <h3 className="font-semibold text-slate-700 capitalize">
+                                            {status.replace('_', ' ')}
+                                        </h3>
+                                    </div>
+                                    <Badge variant="secondary" className="bg-white text-slate-500 shadow-sm border-0">
+                                        {groupedTasks[status]?.length || 0}
                                     </Badge>
                                 </div>
                                 <div className="space-y-3">
                                     <AnimatePresence>
-                                        {groupedTasks[status].map((task) => (
+                                        {groupedTasks[status]?.map((task: any) => (
                                             <motion.div
                                                 key={task.id}
                                                 layout
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -10 }}
+                                                exit={{ opacity: 0, scale: 0.95 }}
+                                                transition={{ duration: 0.2 }}
                                             >
-                                                <Card className="border-slate-100 shadow-sm">
+                                                <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow bg-white overflow-hidden group cursor-grab active:cursor-grabbing">
                                                     <CardContent className="p-4">
-                                                        <p className="font-medium text-slate-900 mb-2">{task.title}</p>
-                                                        <div className="flex items-center justify-between">
-                                                            {task.tag && (
-                                                                <Badge className={`text-xs ${task.tag === 'Design' ? 'bg-rose-100 text-rose-700' :
-                                                                    task.tag === 'Dev' ? 'bg-blue-100 text-blue-700' :
-                                                                        task.tag === 'PM' ? 'bg-teal-100 text-teal-700' :
-                                                                            'bg-amber-100 text-amber-700'
-                                                                    } border-0`}>
-                                                                    {task.tag}
-                                                                </Badge>
-                                                            )}
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <Badge className={`text-[10px] uppercase font-bold tracking-wider ${task.priority === 'high' ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' :
+                                                                    task.priority === 'medium' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' :
+                                                                        'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                } border-0`}>
+                                                                {task.priority || 'Medium'}
+                                                            </Badge>
                                                             <Select
                                                                 value={task.status}
-                                                                onValueChange={(value) => updateTaskMutation.mutate({ taskId: task.id, status: value })}
+                                                                onValueChange={(value) => updateTaskMutation.mutate({ taskId: task.id, updates: { status: value } })}
                                                             >
-                                                                <SelectTrigger className="w-auto h-7 text-xs">
+                                                                <SelectTrigger className="w-auto h-6 text-xs bg-slate-50 border-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                     <SelectValue />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
@@ -700,6 +924,39 @@ function ProjectWorkspace() {
                                                                     <SelectItem value="done">Done</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
+                                                        </div>
+
+                                                        <p className="font-semibold text-slate-900 mb-3 leading-snug">{task.title}</p>
+
+                                                        <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-50">
+                                                            <div className="flex items-center gap-3">
+                                                                {task.assignee && task.assignee !== 'Unassigned' ? (
+                                                                    <div className="flex items-center gap-1.5" title={`Assigned to ${task.assignee}`}>
+                                                                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-purple-700 text-[10px] font-bold ring-2 ring-white">
+                                                                            {task.assignee[0].toUpperCase()}
+                                                                        </div>
+                                                                        <span className="text-xs font-medium text-slate-600 truncate max-w-[80px]">
+                                                                            {task.assignee.split(' ')[0]}
+                                                                        </span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex items-center gap-1.5" title="Unassigned">
+                                                                        <div className="w-6 h-6 rounded-full bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center text-slate-400">
+                                                                            <UserPlus className="w-3 h-3" />
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {task.deadline && (
+                                                                <div className={`flex items-center text-[11px] font-medium ${new Date(task.deadline) < new Date() && task.status !== 'done'
+                                                                        ? 'text-rose-600'
+                                                                        : 'text-slate-500'
+                                                                    }`}>
+                                                                    <Clock className="w-3 h-3 mr-1" />
+                                                                    {format(new Date(task.deadline), 'MMM d')}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </CardContent>
                                                 </Card>
@@ -716,7 +973,7 @@ function ProjectWorkspace() {
                 <TabsContent value="chat" className="mt-0">
                     <Card className="border-slate-100">
                         <CardContent className="p-0">
-                            <div className="h-96 overflow-y-auto p-4 space-y-4">
+                            <div className="h-96 overflow-y-auto p-4 space-y-4" id="chat-messages-container">
                                 {messages.length === 0 ? (
                                     <div className="text-center py-16 text-slate-500">
                                         No messages yet. Start the conversation!
@@ -731,7 +988,9 @@ function ProjectWorkspace() {
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="text-sm font-medium text-slate-900">{msg.sender_name}</span>
                                                     <span className="text-xs text-slate-400">
-                                                        {msg.created_date && format(new Date(msg.created_date), 'MMM d, h:mm a')}
+                                                        {msg.created_date ? (
+                                                            msg.created_date.seconds ? format(new Date(msg.created_date.seconds * 1000), 'MMM d, h:mm a') : format(new Date(msg.created_date), 'MMM d, h:mm a')
+                                                        ) : 'Sending...'}
                                                     </span>
                                                 </div>
                                                 <div className={`p-3 rounded-2xl ${msg.sender_email === user?.email
@@ -744,6 +1003,7 @@ function ProjectWorkspace() {
                                         </div>
                                     ))
                                 )}
+                                <div id="chat-bottom-ref" />
                             </div>
                             <div className="border-t border-slate-100 p-4">
                                 <div className="flex gap-3">
@@ -864,49 +1124,213 @@ function ProjectWorkspace() {
                             <CardContent>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-3xl font-bold text-slate-900">{project.progress || 0}%</span>
-                                        <Badge className={`${(project.progress || 0) >= 75 ? 'bg-emerald-100 text-emerald-700' :
-                                            (project.progress || 0) >= 50 ? 'bg-amber-100 text-amber-700' :
+                                        <div className="flex flex-col">
+                                            <span className="text-3xl font-bold text-slate-900">{calculatedProgress}%</span>
+                                            {totalMilestones > 0 && (
+                                                <span className="text-sm text-slate-500">{completedMilestones} of {totalMilestones} milestones completed</span>
+                                            )}
+                                        </div>
+                                        <Badge className={`${calculatedProgress >= 75 ? 'bg-emerald-100 text-emerald-700' :
+                                            calculatedProgress >= 50 ? 'bg-amber-100 text-amber-700' :
                                                 'bg-slate-100 text-slate-700'
                                             } border-0`}>
-                                            {(project.progress || 0) >= 75 ? 'Almost done!' :
-                                                (project.progress || 0) >= 50 ? 'Good progress' :
-                                                    'Getting started'}
+                                            {calculatedProgress >= 75 ? 'Almost done!' :
+                                                calculatedProgress >= 50 ? 'Good progress' :
+                                                    totalMilestones === 0 ? 'No milestones' : 'Getting started'}
                                         </Badge>
                                     </div>
-                                    <Progress value={project.progress || 0} className="h-3" />
+                                    <Progress value={calculatedProgress} className="h-3" />
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Milestones */}
                         <Card className="border-slate-100">
-                            <CardHeader>
+                            <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle className="text-lg">Milestones</CardTitle>
+                                {isOwner && (
+                                    <Dialog open={showAddMilestone} onOpenChange={setShowAddMilestone}>
+                                        <DialogTrigger asChild>
+                                            <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                                                <Plus className="w-4 h-4 mr-1" />
+                                                Add Milestone
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-h-[90vh] overflow-y-auto">
+                                            <DialogHeader>
+                                                <DialogTitle>Add New Milestone</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-4 py-4">
+                                                <div>
+                                                    <label className="text-sm font-medium text-slate-700 mb-2 block">Title *</label>
+                                                    <Input
+                                                        value={newMilestone.title}
+                                                        onChange={(e) => setNewMilestone({ ...newMilestone, title: e.target.value })}
+                                                        placeholder="e.g. Complete User Authentication"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-slate-700 mb-2 block">Objective</label>
+                                                    <Textarea
+                                                        value={newMilestone.objective}
+                                                        onChange={(e) => setNewMilestone({ ...newMilestone, objective: e.target.value })}
+                                                        placeholder="What is the goal of this milestone?"
+                                                        rows={2}
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="text-sm font-medium text-slate-700 mb-2 block">Start Date</label>
+                                                        <Input
+                                                            type="date"
+                                                            value={newMilestone.startDate}
+                                                            onChange={(e) => setNewMilestone({ ...newMilestone, startDate: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-sm font-medium text-slate-700 mb-2 block">Target Date</label>
+                                                        <Input
+                                                            type="date"
+                                                            value={newMilestone.date}
+                                                            onChange={(e) => setNewMilestone({ ...newMilestone, date: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-slate-700 mb-2 block">Deliverables</label>
+                                                    <div className="space-y-2">
+                                                        {newMilestone.deliverables.map((deliv, index) => (
+                                                            <div key={index} className="flex gap-2">
+                                                                <Input
+                                                                    value={deliv.text}
+                                                                    onChange={(e) => {
+                                                                        const newDelivs = [...newMilestone.deliverables];
+                                                                        newDelivs[index].text = e.target.value;
+                                                                        setNewMilestone({ ...newMilestone, deliverables: newDelivs });
+                                                                    }}
+                                                                    placeholder="Enter deliverable..."
+                                                                />
+                                                                <Button variant="ghost" size="icon" onClick={() => {
+                                                                    const newDelivs = newMilestone.deliverables.filter((_, i) => i !== index);
+                                                                    setNewMilestone({ ...newMilestone, deliverables: newDelivs });
+                                                                }}>
+                                                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                        <Button type="button" variant="outline" size="sm" onClick={() => {
+                                                            setNewMilestone({ ...newMilestone, deliverables: [...newMilestone.deliverables, { text: '', completed: false }] });
+                                                        }}>
+                                                            <Plus className="w-4 h-4 mr-2" />
+                                                            Add Deliverable
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    className="w-full bg-purple-600 hover:bg-purple-700"
+                                                    onClick={() => addMilestoneMutation.mutate()}
+                                                    disabled={!newMilestone.title || addMilestoneMutation.isPending}
+                                                >
+                                                    {addMilestoneMutation.isPending ? 'Adding...' : 'Add Milestone'}
+                                                </Button>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
                             </CardHeader>
                             <CardContent>
-                                {project.milestones?.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {project.milestones.map((milestone: any, i: number) => (
-                                            <div key={i} className="flex items-center gap-4">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${milestone.completed
-                                                    ? 'bg-emerald-100 text-emerald-600'
-                                                    : 'bg-slate-100 text-slate-400'
-                                                    }`}>
+                                {milestones?.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {milestones.map((milestone: any, i: number) => (
+                                            <div key={milestone.id || i} className="flex gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50">
+                                                <button
+                                                    onClick={() => {
+                                                        if (isOwner) {
+                                                            updateMilestoneMutation.mutate({
+                                                                milestoneId: milestone.id,
+                                                                updates: { completed: !milestone.completed }
+                                                            });
+                                                        }
+                                                    }}
+                                                    disabled={!isOwner || updateMilestoneMutation.isPending}
+                                                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${milestone.completed
+                                                        ? 'bg-emerald-100 text-emerald-600'
+                                                        : 'bg-white border-2 border-slate-200 text-slate-400 hover:border-emerald-400 hover:text-emerald-500'
+                                                        } ${isOwner ? 'cursor-pointer' : 'cursor-default opacity-80'}`}
+                                                >
                                                     {milestone.completed ? (
                                                         <CheckCircle2 className="w-5 h-5" />
                                                     ) : (
                                                         <Circle className="w-5 h-5" />
                                                     )}
+                                                </button>
+                                                <div className="flex-1 space-y-3 min-w-0">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                        <h3 className={`font-semibold text-lg ${milestone.completed ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
+                                                            {milestone.title}
+                                                        </h3>
+                                                        <div className="flex gap-2">
+                                                            {milestone.startDate && (
+                                                                <Badge variant="outline" className="w-fit text-slate-500 bg-white border-slate-200">
+                                                                    <Clock className="w-3 h-3 mr-1" />
+                                                                    Starts: {milestone.startDate}
+                                                                </Badge>
+                                                            )}
+                                                            {milestone.date && (
+                                                                <Badge variant="outline" className="w-fit text-slate-500 bg-white border-slate-200">
+                                                                    <Clock className="w-3 h-3 mr-1" />
+                                                                    Target: {milestone.date}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {milestone.objective && (
+                                                        <div>
+                                                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Objective</h4>
+                                                            <p className="text-sm text-slate-700">{milestone.objective}</p>
+                                                        </div>
+                                                    )}
+
+                                                    {milestone.deliverables && milestone.deliverables.length > 0 && (
+                                                        <div>
+                                                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Deliverables</h4>
+                                                            <div className="space-y-2 bg-white p-3 rounded-lg border border-slate-100">
+                                                                {milestone.deliverables.map((deliv: any, idx: number) => (
+                                                                    <div key={idx} className="flex items-start gap-2">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                if (isOwner) {
+                                                                                    const updatedDelivs = [...milestone.deliverables];
+                                                                                    updatedDelivs[idx] = { ...updatedDelivs[idx], completed: !updatedDelivs[idx].completed };
+                                                                                    updateMilestoneMutation.mutate({
+                                                                                        milestoneId: milestone.id,
+                                                                                        updates: { deliverables: updatedDelivs }
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            disabled={!isOwner || updateMilestoneMutation.isPending}
+                                                                            className={`mt-0.5 shrink-0 transition-colors ${deliv.completed ? 'text-emerald-500' : 'text-slate-300'} ${isOwner ? 'hover:text-emerald-400' : 'cursor-default opacity-80'}`}
+                                                                        >
+                                                                            {deliv.completed ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
+                                                                        </button>
+                                                                        <span className={`text-sm ${deliv.completed ? 'text-slate-500 line-through' : 'text-slate-700'}`}>{deliv.text}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <span className={`${milestone.completed ? 'text-slate-500 line-through' : 'text-slate-900 font-medium'}`}>
-                                                    {milestone.title}
-                                                </span>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-slate-500 text-center py-4">No milestones set</p>
+                                    <div className="text-center py-10">
+                                        <p className="text-slate-500 mb-2">No roadmaps / milestones set yet</p>
+                                        {isOwner && (
+                                            <p className="text-sm text-slate-400">Click &quot;Add Milestone&quot; above to create your project roadmap.</p>
+                                        )}
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>

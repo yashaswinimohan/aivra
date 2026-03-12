@@ -35,12 +35,18 @@ const userRoutes = require('./routes/userRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const projectMembershipRoutes = require('./routes/projectMembershipRoutes');
+const projectMilestoneRoutes = require('./routes/projectMilestoneRoutes');
+const projectTaskRoutes = require('./routes/projectTaskRoutes');
+const projectMessageRoutes = require('./routes/projectMessageRoutes');
 
 app.use('/api/courses', courseRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/projectmemberships', projectMembershipRoutes);
+app.use('/api/projectmilestones', projectMilestoneRoutes);
+app.use('/api/projecttasks', projectTaskRoutes);
+app.use('/api/projectmessages', projectMessageRoutes);
 
 app.get('/', (req, res) => {
   res.send('Aivra Backend is running');

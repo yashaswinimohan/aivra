@@ -13,9 +13,9 @@ router.post('/', verifyToken, projectController.joinProject);
 router.post('/invite', verifyToken, projectController.inviteUserToProject);
 
 // Update membership status (Accept/Reject)
-router.put('/:id', verifyToken, projectController.updateMembershipStatus);
+router.put('/:projectId/:id', verifyToken, projectController.updateMembershipStatus);
 
 // Leave/remove from project
-router.delete('/:id', verifyToken, projectController.leaveOrRemoveProjectMember);
+router.delete('/:projectId/:id', verifyToken, projectController.leaveOrRemoveProjectMember);
 
 module.exports = router;

@@ -44,7 +44,7 @@ exports.createProject = async (req, res) => {
         const docRef = await db.collection('projects').add(newProject);
 
         // Also add the owner as a member
-        await db.collection('projectmemberships').add({
+        await db.collection('projects').doc(docRef.id).collection('members').add({
             project_id: docRef.id,
             user_id: ownerId,
             user_email: req.user.email,
@@ -58,16 +58,43 @@ exports.createProject = async (req, res) => {
     }
 };
 
-// Get project memberships (mocked for now, depending on req.query)
+// Get project memberships
 exports.getProjectMemberships = async (req, res) => {
     try {
         const email = req.query.user_email;
-        let query = db.collection('projectmemberships');
-        if (email) {
-            query = query.where('user_email', '==', email);
+        const project_id = req.query.project_id;
+        let query;
+
+        if (project_id) {
+            query = db.collection('projects').doc(project_id).collection('members');
+            if (email) query = query.where('user_email', '==', email);
+        } else if (email) {
+            query = db.collectionGroup('members').where('user_email', '==', email);
+        } else {
+            return res.status(400).json({ message: 'Must provide user_email or project_id' });
         }
+
         const snapshot = await query.get();
-        const memberships = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const memberships = [];
+        const userCache = {};
+
+        for (const doc of snapshot.docs) {
+            const memData = doc.data();
+            let userName = 'User';
+            if (memData.user_id) {
+                if (!userCache[memData.user_id]) {
+                    const userDoc = await db.collection('users').doc(memData.user_id).get();
+                    if (userDoc.exists) {
+                        const data = userDoc.data();
+                        userCache[memData.user_id] = data.full_name || data.displayName || data.firstName || memData.user_email || 'User';
+                    } else {
+                        userCache[memData.user_id] = memData.user_email || 'User';
+                    }
+                }
+                userName = userCache[memData.user_id];
+            }
+            memberships.push({ id: doc.id, ...memData, user_name: userName });
+        }
         res.status(200).json(memberships);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -119,26 +146,20 @@ exports.joinProject = async (req, res) => {
         const user_id = req.user.uid;
         const user_email = req.user.email;
 
-        // Fetch user basic info to store in membership
-        const userDoc = await db.collection('users').doc(user_id).get();
-        const userName = userDoc.exists ? userDoc.data().full_name : 'User';
-
         const membershipData = {
             project_id,
             user_id,
             user_email,
-            user_name: userName,
             role: role || 'Member',
             status: 'pending', // <--- New joining flow: Requires approval
             joinedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
-        const docRef = await db.collection('projectmemberships').add(membershipData);
+        const docRef = await db.collection('projects').doc(project_id).collection('members').add(membershipData);
 
-        // Do not add to project.team_members here anymore. 
-        // We will add them when the owner accepts the membership.
-
-        res.status(201).json({ id: docRef.id, ...membershipData });
+        // Get basic name from token to immediately return to frontend
+        let userName = req.user.name || req.user.displayName || 'User';
+        res.status(201).json({ id: docRef.id, ...membershipData, user_name: userName });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -147,17 +168,18 @@ exports.joinProject = async (req, res) => {
 // Leave or remove project member
 exports.leaveOrRemoveProjectMember = async (req, res) => {
     try {
-        const { id } = req.params; // membership ID
+        const { projectId, id } = req.params; // membership ID
 
-        const memDoc = await db.collection('projectmemberships').doc(id).get();
+        const memRef = db.collection('projects').doc(projectId).collection('members').doc(id);
+        const memDoc = await memRef.get();
         if (!memDoc.exists) {
             return res.status(404).json({ message: 'Membership not found' });
         }
         const memData = memDoc.data();
 
-        await db.collection('projectmemberships').doc(id).delete();
+        await memRef.delete();
 
-        const projectRef = db.collection('projects').doc(memData.project_id);
+        const projectRef = db.collection('projects').doc(projectId);
         const projectDoc = await projectRef.get();
         if (projectDoc.exists && projectDoc.data().team_members) {
             const updatedMembers = projectDoc.data().team_members.filter(m => m.id !== memData.user_id);
@@ -219,7 +241,7 @@ exports.deleteProject = async (req, res) => {
         await docRef.delete();
 
         // Delete associated memberships
-        const membershipsSnapshot = await db.collection('projectmemberships').where('project_id', '==', id).get();
+        const membershipsSnapshot = await db.collection('projects').doc(id).collection('members').get();
         const batch = db.batch();
         membershipsSnapshot.docs.forEach(memDoc => {
             batch.delete(memDoc.ref);
@@ -235,10 +257,10 @@ exports.deleteProject = async (req, res) => {
 // Update membership status (Accept/Reject)
 exports.updateMembershipStatus = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { projectId, id } = req.params;
         const { status } = req.body; // 'accepted' or 'rejected'
 
-        const memRef = db.collection('projectmemberships').doc(id);
+        const memRef = db.collection('projects').doc(projectId).collection('members').doc(id);
         const memDoc = await memRef.get();
 
         if (!memDoc.exists) {
@@ -246,7 +268,7 @@ exports.updateMembershipStatus = async (req, res) => {
         }
 
         const memData = memDoc.data();
-        const projectRef = db.collection('projects').doc(memData.project_id);
+        const projectRef = db.collection('projects').doc(projectId);
         const projectDoc = await projectRef.get();
 
         if (!projectDoc.exists) {
@@ -259,10 +281,22 @@ exports.updateMembershipStatus = async (req, res) => {
 
         if (status === 'accepted') {
             await memRef.update({ status: 'accepted' });
+            
+            let userName = memData.user_name; // Fallback for legacy docs
+            if (!userName && memData.user_id) {
+                 const userDoc = await db.collection('users').doc(memData.user_id).get();
+                 if (userDoc.exists) {
+                     const data = userDoc.data();
+                     userName = data.full_name || data.displayName || data.firstName || memData.user_email || 'User';
+                 } else {
+                     userName = memData.user_email || 'User';
+                 }
+            }
+
             await projectRef.update({
                 team_members: admin.firestore.FieldValue.arrayUnion({
                     id: memData.user_id,
-                    name: memData.user_name,
+                    name: userName,
                     role: memData.role,
                     email: memData.user_email
                 })
@@ -306,8 +340,7 @@ exports.inviteUserToProject = async (req, res) => {
         const userId = userDoc.id;
 
         // Check if already a member or pending
-        const existingMemSnapshot = await db.collection('projectmemberships')
-            .where('project_id', '==', project_id)
+        const existingMemSnapshot = await db.collection('projects').doc(project_id).collection('members')
             .where('user_id', '==', userId)
             .get();
 
@@ -319,14 +352,13 @@ exports.inviteUserToProject = async (req, res) => {
             project_id,
             user_id: userId,
             user_email: email,
-            user_name: userData.full_name || 'User',
             role: role || 'Member',
             status: 'invited',
             invitedBy: req.user.uid,
             invitedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
-        const memRef = await db.collection('projectmemberships').add(membershipData);
+        const memRef = await db.collection('projects').doc(project_id).collection('members').add(membershipData);
 
         res.status(201).json({ id: memRef.id, ...membershipData, message: 'User invited successfully' });
     } catch (error) {
