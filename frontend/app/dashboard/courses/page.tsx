@@ -10,6 +10,7 @@ interface Course {
     title: string;
     description: string;
     status: 'draft' | 'published';
+    instructorId?: string;
     level?: string;
     domain?: string;
     duration?: {
@@ -32,6 +33,7 @@ export default function Courses() {
     const [loading, setLoading] = useState(true);
 
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
 
     // Filter States
     const [searchQuery, setSearchQuery] = useState("");
@@ -56,6 +58,7 @@ export default function Courses() {
 
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
+                setUserId(currentUser.uid);
                 try {
                     const token = await currentUser.getIdToken();
                     const [profileRes, enrollmentsRes] = await Promise.all([
@@ -79,6 +82,7 @@ export default function Courses() {
                 }
             } else {
                 setUserRole(null);
+                setUserId(null);
                 setEnrollments([]);
             }
             setLoading(false);
@@ -89,8 +93,9 @@ export default function Courses() {
     }, []);
 
     const filteredCourses = courses.filter(course => {
-        // 1. Role-based filtering: Students only see published courses
-        if (userRole !== 'professor' && userRole !== 'admin' && course.status !== 'published') {
+        // 1. Role-based filtering: Only the course owner or an admin can see draft courses.
+        const isCourseOwner = course.instructorId === userId;
+        if (!isCourseOwner && userRole !== 'admin' && course.status !== 'published') {
             return false;
         }
 
@@ -195,6 +200,7 @@ export default function Courses() {
                         {filteredCourses.map((course) => {
                             const progress = getProgress(course.id, course.modules);
                             const isEnrolled = enrollments.some(e => e.courseId === course.id);
+                            const isCourseOwner = course.instructorId === userId;
 
                             return (
                                 <div key={course.id} className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-blue-500/50 transition group shadow-sm relative flex flex-col h-full">
@@ -246,7 +252,7 @@ export default function Courses() {
                                                 </Link>
                                             ) : (
                                                 <div className="flex gap-2">
-                                                    {userRole === 'professor' ? (
+                                                    {userRole === 'professor' && isCourseOwner ? (
                                                         <Link href={`/dashboard/courses/${course.id}/manage`} className="block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg transition border border-slate-300">
                                                             Manage
                                                         </Link>

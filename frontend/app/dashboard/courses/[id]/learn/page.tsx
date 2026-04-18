@@ -2,8 +2,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, FileText, Link as LinkIcon, Menu, X, CheckCircle, PlayCircle } from "lucide-react";
+import { ChevronLeft, FileText, Link as LinkIcon, Menu, X, CheckCircle, PlayCircle, Lock } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { auth } from "@/lib/firebase";
 
 interface ChapterResource {
     id: string;
@@ -104,9 +105,9 @@ export default function LearnPage() {
         const fetchEnrollment = async () => {
             if (!courseId || !user) return;
             try {
-                const token = await user.getIdToken();
+                const token = await auth.currentUser?.getIdToken();
                 console.log("Fetching from:", `${process.env.NEXT_PUBLIC_API_URL}/api/enrollments/${courseId}`);
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/enrollments/${courseId}`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/enrollments/${courseId}?autoEnroll=true`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -140,7 +141,7 @@ export default function LearnPage() {
         setCompletedChapters(newCompleted); // Optimistic update
 
         try {
-            const token = await user.getIdToken();
+            const token = await auth.currentUser?.getIdToken();
             await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/enrollments/${courseId}/progress`, {
                 method: 'POST',
                 headers: {
@@ -403,10 +404,22 @@ export default function LearnPage() {
                             const completedModuleChapters = module.chapters?.filter(c => completedChapters.includes(c.id)).length || 0;
                             const isModuleComplete = totalModuleChapters > 0 && totalModuleChapters === completedModuleChapters;
 
+                            let isModuleUnlocked = true;
+                            for (let i = 0; i < mIndex; i++) {
+                                const prevModule = course.modules[i];
+                                const prevTotal = prevModule.chapters?.length || 0;
+                                const prevCompleted = prevModule.chapters?.filter(c => completedChapters.includes(c.id)).length || 0;
+                                if (prevTotal === 0 || prevTotal !== prevCompleted) {
+                                    isModuleUnlocked = false;
+                                    break;
+                                }
+                            }
+
                             return (
-                                <div key={module.id}>
+                                <div key={module.id} className={!isModuleUnlocked ? "opacity-60" : ""}>
                                     <div className="flex items-center justify-between mb-3 px-1">
-                                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">
+                                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                                            {!isModuleUnlocked && <Lock size={14} className="text-slate-400" />}
                                             Module {mIndex + 1}: {module.title}
                                         </h3>
                                         {isModuleComplete && <CheckCircle size={16} className="text-emerald-500" />}
@@ -419,17 +432,22 @@ export default function LearnPage() {
                                             return (
                                                 <button
                                                     key={chapter.id}
+                                                    disabled={!isModuleUnlocked}
                                                     onClick={() => {
                                                         setActiveModuleId(module.id);
                                                         setActiveChapterId(chapter.id);
                                                         if (window.innerWidth < 768) setSidebarOpen(false);
                                                     }}
                                                     className={`w-full text-left p-3 rounded-lg text-sm flex items-start gap-3 transition group
-                                                        ${isActive ? 'bg-blue-50 text-blue-700 font-medium border border-blue-100' : 'text-slate-600 hover:bg-slate-100 border border-transparent'}
+                                                        ${!isModuleUnlocked ? 'cursor-not-allowed text-slate-500 bg-transparent' : 
+                                                            isActive ? 'bg-blue-50 text-blue-700 font-medium border border-blue-100' : 
+                                                                'text-slate-600 hover:bg-slate-100 border border-transparent'}
                                                     `}
                                                 >
                                                     <div className="mt-0.5 flex-shrink-0">
-                                                        {isCompleted ? (
+                                                        {!isModuleUnlocked ? (
+                                                            <Lock size={18} className="text-slate-300" />
+                                                        ) : isCompleted ? (
                                                             <CheckCircle size={18} className="text-emerald-500 fill-emerald-50" />
                                                         ) : isActive ? (
                                                             <PlayCircle size={18} className="text-blue-600" />

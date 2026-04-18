@@ -127,7 +127,7 @@ export default function ManageCourse() {
                             </Link>
                         </div>
 
-                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm opacity-75">
+                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                                 <Users className="text-purple-600" size={20} />
                                 Student Management
@@ -136,12 +136,18 @@ export default function ManageCourse() {
                                 Manage enrolled students, view progress, and handle grading.
                             </p>
                             <div className="flex gap-3">
-                                <button disabled className="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                    Manage Students (Coming Soon)
-                                </button>
-                                <button disabled className="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg cursor-not-allowed text-sm font-medium">
-                                    Gradebook (Coming Soon)
-                                </button>
+                                <Link
+                                    href={`/dashboard/courses/${courseId}/manage/students`}
+                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium text-sm"
+                                >
+                                    Manage Students
+                                </Link>
+                                <Link
+                                    href={`/dashboard/courses/${courseId}/manage/gradebook`}
+                                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium text-sm"
+                                >
+                                    Gradebook
+                                </Link>
                             </div>
                         </div>
                     </div>

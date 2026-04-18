@@ -98,6 +98,8 @@ function CreateCourseContent() {
     const [newAttachmentFile, setNewAttachmentFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
 
+    const [isAuthorized, setIsAuthorized] = useState(false);
+
     const steps = [
         { id: 1, title: "Project Details" },
         { id: 2, title: "Curriculum" },
@@ -107,7 +109,10 @@ function CreateCourseContent() {
     useEffect(() => {
         const checkRole = async () => {
             const currentUser = auth.currentUser;
-            if (!currentUser) return;
+            if (!currentUser) {
+                router.push("/login");
+                return;
+            }
 
             try {
                 const token = await currentUser.getIdToken();
@@ -117,6 +122,8 @@ function CreateCourseContent() {
                 const profile = await res.json();
                 if (profile.role !== 'professor' && profile.role !== 'admin') {
                     router.push("/dashboard");
+                } else {
+                    setIsAuthorized(true);
                 }
             } catch (error) {
                 console.error("Failed to check role:", error);
@@ -218,16 +225,23 @@ function CreateCourseContent() {
                 } else if (shouldAdvanceStep) {
                     setStep(step + 1);
                 }
-            } else {
-                console.error("Failed to save course");
+            } finally {
+                setLoading(false);
             }
         } catch (error) {
             console.error("Error saving course:", error);
             alert("Failed to save course");
-        } finally {
             setLoading(false);
         }
     };
+
+    if (!isAuthorized) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+        );
+    }
 
     return (
         <div className="w-full max-w-6xl mx-auto px-6">

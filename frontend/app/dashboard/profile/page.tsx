@@ -36,7 +36,7 @@ import {
     Target
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { BadgeCard, PointsDisplay, ProgressRing } from '@/components/gamification';
+import { BadgeCard, PointsDisplay, ProgressRing, CertificateCard, PortfolioCard } from '@/components/gamification';
 
 const roleOptions = ['Product Manager', 'UX Designer', 'Developer', 'Data Analyst', 'AI Engineer'];
 
@@ -128,6 +128,12 @@ export default function Profile() {
         queryFn: async () => (await api.get('/userpointss')).data,
     });
 
+    const { data: certificates = [], refetch: refetchCertificates } = useQuery({
+        queryKey: ['certificates', user?.email],
+        queryFn: async () => (await api.get('/certificates', { params: { user_email: user?.email } })).data,
+        enabled: !!user?.email,
+    });
+
     const completedEnrollments = enrollments.filter((e: any) => e.progress >= 100);
     const completedCourses = courses.filter((c: any) =>
         completedEnrollments.some((e: any) => e.course_id === c.id)
@@ -153,6 +159,13 @@ export default function Profile() {
             setUser(updated);
         },
         onSuccess: () => setIsEditing(false),
+    });
+
+    const claimCertificateMutation = useMutation({
+        mutationFn: async (payload: any) => {
+            await api.post('/certificates', payload);
+        },
+        onSuccess: () => refetchCertificates(),
     });
 
     const addSkill = () => {
@@ -476,7 +489,19 @@ export default function Profile() {
                                                 <p className="font-medium text-slate-900">{course.title}</p>
                                                 <p className="text-sm text-slate-500">{course.category} • {course.level}</p>
                                             </div>
-                                            <Badge className="bg-emerald-100 text-emerald-700 border-0">Completed</Badge>
+                                            <div className="flex flex-col gap-2 items-end">
+                                                <Badge className="bg-emerald-100 text-emerald-700 border-0">Completed</Badge>
+                                                {!certificates.some((c: any) => c.reference_id === course.id) && (
+                                                    <Button variant="outline" size="sm" onClick={() => claimCertificateMutation.mutate({
+                                                        user_email: user.email,
+                                                        type: 'course',
+                                                        reference_id: course.id,
+                                                        title: `Course Completion: ${course.title}`
+                                                    })} disabled={claimCertificateMutation.isPending}>
+                                                        Claim Certificate
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -518,10 +543,23 @@ export default function Profile() {
                                                 <p className="font-medium text-slate-900">{project.title}</p>
                                                 <p className="text-sm text-slate-500">{project.duration}</p>
                                             </div>
-                                            <Button variant="outline" size="sm">
-                                                <ExternalLink className="w-4 h-4 mr-1" />
-                                                View
-                                            </Button>
+                                            <div className="flex gap-2">
+                                                {!certificates.some((c: any) => c.reference_id === project.id) && (
+                                                    <Button variant="outline" size="sm" onClick={() => claimCertificateMutation.mutate({
+                                                        user_email: user.email,
+                                                        type: 'project',
+                                                        reference_id: project.id,
+                                                        title: `Project Completed: ${project.title}`,
+                                                        skills: project.tags || project.skills || []
+                                                    })} disabled={claimCertificateMutation.isPending}>
+                                                        Claim Portfolio Credit
+                                                    </Button>
+                                                )}
+                                                <Button variant="outline" size="sm">
+                                                    <ExternalLink className="w-4 h-4 mr-1" />
+                                                    View
+                                                </Button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -529,6 +567,59 @@ export default function Profile() {
                         </CardContent>
                     </Card>
                 </motion.div>
+
+                {/* Certificates Section */}
+                {certificates.filter((c: any) => c.type === 'course').length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.45 }}
+                    >
+                        <Card className="border-slate-100">
+                            <CardHeader>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <Award className="w-5 h-5 text-amber-500" />
+                                    Course Certificates
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {certificates.filter((c: any) => c.type === 'course').map((cert: any) => (
+                                        <CertificateCard key={cert.id} certificate={cert} />
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                )}
+
+                {/* Portfolio Showcase Section */}
+                {certificates.filter((c: any) => c.type === 'project').length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                    >
+                        <Card className="border-slate-100">
+                            <CardHeader>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <Briefcase className="w-5 h-5 text-purple-600" />
+                                    Portfolio Credits
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {certificates.filter((c: any) => c.type === 'project').map((portfolio: any) => (
+                                        <PortfolioCard key={portfolio.id} portfolioItem={portfolio} />
+                                    ))}
+                                    {certificates.filter((c: any) => c.type === 'project').map((cert: any) => (
+                                        <CertificateCard key={`cert-${cert.id}`} certificate={{...cert, title: cert.title + " Certificate"}} />
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                )}
             </div>
 
             {/* Edit Dialog */}
