@@ -186,9 +186,9 @@ export default function Gradebook() {
                                                                 <input 
                                                                     autoFocus
                                                                     type="number"
-                                                                    value={editingGrade.score}
-                                                                    onChange={e => setEditingGrade({...editingGrade, score: e.target.value})}
-                                                                    onKeyDown={e => e.key === 'Enter' && handleSaveGrade(student.userId, a.id, editingGrade.score)}
+                                                                    value={editingGrade?.score || ""}
+                                                                    onChange={e => editingGrade && setEditingGrade({...editingGrade, score: e.target.value})}
+                                                                    onKeyDown={e => e.key === 'Enter' && editingGrade && handleSaveGrade(student.userId, a.id, editingGrade.score)}
                                                                     className="w-full text-center border border-blue-400 rounded px-2 py-1 text-sm outline-none focus:ring-2 ring-blue-100"
                                                                 />
                                                             </div>
