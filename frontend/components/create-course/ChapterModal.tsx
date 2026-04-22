@@ -11,6 +11,13 @@ export interface ChapterResource {
     url: string;
 }
 
+export interface ChapterAssessment {
+    instructions: string;
+    totalScore: number;
+    passingScore: number;
+    resources: ChapterResource[];
+}
+
 export interface ChapterContent {
     editorData: any; // Editor.js JSON data
     resources: ChapterResource[];
@@ -18,6 +25,7 @@ export interface ChapterContent {
         questions: MCQ[];
         passingScore: number;
     };
+    assessmentSection?: ChapterAssessment;
 }
 
 export interface MCQ {
@@ -40,7 +48,16 @@ export default function ChapterModal({ isOpen, onClose, onSave, initialData }: C
     const [resources, setResources] = useState<ChapterResource[]>(initialData?.content?.resources || []);
     const [mcqQuestions, setMcqQuestions] = useState<MCQ[]>(initialData?.content?.mcqSection?.questions || []);
     const [passingScore, setPassingScore] = useState(initialData?.content?.mcqSection?.passingScore || 70);
-    const [activeTab, setActiveTab] = useState<'content' | 'mcq'>('content');
+    
+    // Assessment State
+    const [assessmentEnabled, setAssessmentEnabled] = useState(!!initialData?.content?.assessmentSection);
+    const [assessmentInstructions, setAssessmentInstructions] = useState(initialData?.content?.assessmentSection?.instructions || "");
+    const [assessmentTotalScore, setAssessmentTotalScore] = useState(initialData?.content?.assessmentSection?.totalScore || 100);
+    const [assessmentPassingScore, setAssessmentPassingScore] = useState(initialData?.content?.assessmentSection?.passingScore || 70);
+    const [assessmentResources, setAssessmentResources] = useState<ChapterResource[]>(initialData?.content?.assessmentSection?.resources || []);
+
+    const [activeTab, setActiveTab] = useState<'content' | 'mcq' | 'assessment'>('content');
+    const [uploaderTarget, setUploaderTarget] = useState<'content' | 'assessment'>('content');
 
     // Editor State
     const editorRef = useRef<any>(null);
@@ -209,7 +226,12 @@ export default function ChapterModal({ isOpen, onClose, onSave, initialData }: C
             url: finalUrl
         };
 
-        setResources([...resources, newResource]);
+        if (uploaderTarget === 'assessment') {
+            setAssessmentResources([...assessmentResources, newResource]);
+        } else {
+            setResources([...resources, newResource]);
+        }
+        
         // Reset inputs
         setResourceTitle("");
         setResourceUrl("");
@@ -217,8 +239,12 @@ export default function ChapterModal({ isOpen, onClose, onSave, initialData }: C
         setIsResourceInputOpen(false);
     };
 
-    const removeResource = (id: string) => {
-        setResources(resources.filter(r => r.id !== id));
+    const removeResource = (id: string, target: 'content' | 'assessment' = 'content') => {
+        if (target === 'assessment') {
+            setAssessmentResources(assessmentResources.filter(r => r.id !== id));
+        } else {
+            setResources(resources.filter(r => r.id !== id));
+        }
     };
 
     const handleSave = async () => {
@@ -234,6 +260,12 @@ export default function ChapterModal({ isOpen, onClose, onSave, initialData }: C
                     mcqSection: mcqQuestions.length > 0 ? {
                         questions: mcqQuestions,
                         passingScore
+                    } : undefined,
+                    assessmentSection: assessmentEnabled ? {
+                        instructions: assessmentInstructions,
+                        totalScore: assessmentTotalScore,
+                        passingScore: assessmentPassingScore,
+                        resources: assessmentResources
                     } : undefined
                 }
             });
@@ -343,7 +375,7 @@ export default function ChapterModal({ isOpen, onClose, onSave, initialData }: C
                     {/* Tabs */}
                     <div className="flex gap-4 mb-6 border-b border-slate-200">
                         <button
-                            onClick={() => setActiveTab('content')}
+                            onClick={() => { setActiveTab('content'); setUploaderTarget('content'); }}
                             className={`pb-2 px-4 font-medium transition ${activeTab === 'content' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             Content
@@ -353,6 +385,12 @@ export default function ChapterModal({ isOpen, onClose, onSave, initialData }: C
                             className={`pb-2 px-4 font-medium transition ${activeTab === 'mcq' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             MCQ Quiz
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab('assessment'); setUploaderTarget('assessment'); }}
+                            className={`pb-2 px-4 font-medium transition ${activeTab === 'assessment' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            Take-Home Assessment
                         </button>
                     </div>
 
@@ -573,6 +611,152 @@ export default function ChapterModal({ isOpen, onClose, onSave, initialData }: C
                                 <Plus size={20} />
                                 Add New Question
                             </button>
+                        </div>
+                    </div>
+
+                    <div className={activeTab === 'assessment' ? 'block' : 'hidden'}>
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative pt-12">
+                                <label className="absolute top-4 right-4 flex items-center gap-2 cursor-pointer font-semibold text-slate-700 select-none">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={assessmentEnabled} 
+                                        onChange={(e) => setAssessmentEnabled(e.target.checked)}
+                                        className="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                                    />
+                                    Enable Assessment
+                                </label>
+
+                                <div className={`space-y-6 ${!assessmentEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Instructions / Prompt</label>
+                                        <textarea
+                                            value={assessmentInstructions}
+                                            onChange={(e) => setAssessmentInstructions(e.target.value)}
+                                            className="w-full p-4 border border-slate-200 rounded-lg outline-none focus:border-blue-500 min-h-[150px] font-medium resize-y"
+                                            placeholder="Write the essay prompt, instructions for the coding test, or general guidelines for the upload here..."
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                            <h3 className="text-sm font-semibold text-slate-900 mb-1">Total Points</h3>
+                                            <p className="text-xs text-slate-500 mb-3">Maximum score possible.</p>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={assessmentTotalScore}
+                                                onChange={(e) => setAssessmentTotalScore(Number(e.target.value))}
+                                                className="w-full max-w-[120px] p-2 font-bold border border-slate-200 rounded-lg outline-none focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                            <h3 className="text-sm font-semibold text-blue-900 mb-1">Passing Percentage</h3>
+                                            <p className="text-xs text-blue-700 mb-3">% needed to pass.</p>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="100"
+                                                    value={assessmentPassingScore}
+                                                    onChange={(e) => setAssessmentPassingScore(Number(e.target.value))}
+                                                    className="w-full max-w-[120px] p-2 font-bold border border-blue-200 rounded-lg text-blue-900 outline-none focus:border-blue-500"
+                                                />
+                                                <span className="font-bold text-blue-900">%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Assessment Resources */}
+                                    <div className="mb-4 pt-4 border-t border-slate-100">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Attached Files / Templates</label>
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <button
+                                                onClick={() => { setResourceType('url'); setUploaderTarget('assessment'); setIsResourceInputOpen(true); }}
+                                                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded text-slate-600 hover:border-blue-400 hover:text-blue-600 transition shadow-sm text-sm"
+                                            >
+                                                <LinkIcon size={14} />
+                                                Add Link
+                                            </button>
+                                            <button
+                                                onClick={() => { setResourceType('pdf'); setUploaderTarget('assessment'); setIsResourceInputOpen(true); }}
+                                                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded text-slate-600 hover:border-blue-400 hover:text-blue-600 transition shadow-sm text-sm"
+                                            >
+                                                <FileText size={14} />
+                                                Upload PDF
+                                            </button>
+                                        </div>
+
+                                        {/* Resource Input Area for Assessment */}
+                                        {isResourceInputOpen && uploaderTarget === 'assessment' && (
+                                            <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm mb-6 animate-in slide-in-from-top-2">
+                                                <h4 className="text-sm font-semibold text-slate-900 mb-3">Add {resourceType === 'pdf' ? 'PDF Document' : 'External Link'}</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                    <input
+                                                        type="text"
+                                                        value={resourceTitle}
+                                                        onChange={(e) => setResourceTitle(e.target.value)}
+                                                        placeholder="Resource Title (e.g. Assessment Rubric)"
+                                                        className="p-2 border border-slate-200 rounded-lg outline-none focus:border-purple-500 text-sm"
+                                                    />
+                                                    {resourceType === 'url' ? (
+                                                        <input
+                                                            key="url-input"
+                                                            type="url"
+                                                            value={resourceUrl}
+                                                            onChange={(e) => setResourceUrl(e.target.value)}
+                                                            placeholder="https://..."
+                                                            className="p-2 border border-slate-200 rounded-lg outline-none focus:border-purple-500 text-sm"
+                                                        />
+                                                    ) : (
+                                                        <input
+                                                            key="file-input"
+                                                            type="file"
+                                                            accept=".pdf"
+                                                            onChange={(e) => setResourceFile(e.target.files ? e.target.files[0] : null)}
+                                                            className="p-2 border border-slate-200 rounded-lg text-sm text-slate-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => setIsResourceInputOpen(false)}
+                                                        className="px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-50 rounded-lg"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        onClick={handleAddResource}
+                                                        disabled={uploading}
+                                                        className="px-4 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                                                    >
+                                                        {uploading && <Loader2 size={14} className="animate-spin" />}
+                                                        Add Resource
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {assessmentResources.length > 0 && (
+                                            <div className="space-y-2">
+                                                {assessmentResources.map((res) => (
+                                                    <div key={res.id} className="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded">
+                                                        <div className="flex items-center gap-2 truncate">
+                                                            <div className={`p-1 rounded ${res.type === 'pdf' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                                                                {res.type === 'pdf' ? <FileText size={14} /> : <LinkIcon size={14} />}
+                                                            </div>
+                                                            <span className="text-sm text-slate-800">{res.title}</span>
+                                                        </div>
+                                                        <button onClick={() => removeResource(res.id, 'assessment')} className="text-slate-400 hover:text-red-500">
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

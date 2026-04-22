@@ -41,6 +41,7 @@ const projectMessageRoutes = require('./routes/projectMessageRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const gradebookRoutes = require('./routes/gradebookRoutes');
+const submissionRoutes = require('./routes/submissionRoutes');
 
 app.use('/api/courses', courseRoutes);
 app.use('/api/users', userRoutes);
@@ -53,6 +54,7 @@ app.use('/api/projectmessages', projectMessageRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/grades', gradebookRoutes);
+app.use('/api/submissions', submissionRoutes);
 
 app.get('/', (req, res) => {
   res.send('Aivra Backend is running');

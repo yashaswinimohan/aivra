@@ -2,15 +2,22 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, FileText, Link as LinkIcon, Menu, X, CheckCircle, PlayCircle, Lock } from "lucide-react";
+import { ChevronLeft, FileText, Link as LinkIcon, Menu, X, CheckCircle, PlayCircle, Lock, Upload, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
-import { auth } from "@/lib/firebase";
+import { auth, storage } from "@/lib/firebase";
 
 interface ChapterResource {
     id: string;
     type: 'pdf' | 'url';
     title: string;
     url: string;
+}
+
+export interface ChapterAssessment {
+    instructions: string;
+    totalScore: number;
+    passingScore: number;
+    resources: ChapterResource[];
 }
 
 interface ChapterContent {
@@ -20,6 +27,7 @@ interface ChapterContent {
         questions: MCQ[];
         passingScore: number;
     };
+    assessmentSection?: ChapterAssessment;
 }
 
 interface MCQ {
@@ -70,6 +78,12 @@ export default function LearnPage() {
     const [showQuizResult, setShowQuizResult] = useState(false);
     const [isQuizStarted, setIsQuizStarted] = useState(false);
 
+    // Assessment State
+    const [assessmentText, setAssessmentText] = useState("");
+    const [assessmentFile, setAssessmentFile] = useState<File | null>(null);
+    const [assessmentSubmitting, setAssessmentSubmitting] = useState(false);
+    const [currentSubmission, setCurrentSubmission] = useState<any>(null);
+
     const editorInstanceRef = useRef<any>(null);
 
     useEffect(() => {
@@ -99,6 +113,39 @@ export default function LearnPage() {
         };
         fetchCourse();
     }, [courseId]);
+
+    // Fetch submission if Assessment Section exists
+    useEffect(() => {
+        const checkSubmission = async () => {
+            if (!activeChapterId || !course || !user) return;
+            const chapter = course.modules.flatMap(m => m.chapters).find(c => c.id === activeChapterId);
+            if (chapter?.content?.assessmentSection) {
+                try {
+                    const token = await auth.currentUser?.getIdToken();
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/submissions/chapter/${activeChapterId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setCurrentSubmission(data);
+                        if (data) {
+                            setAssessmentText(data.textResponse || "");
+                        }
+                    } else {
+                        setCurrentSubmission(null);
+                        setAssessmentText("");
+                    }
+                } catch (e) {
+                    console.error("Failed to check submission", e);
+                }
+            } else {
+                setCurrentSubmission(null);
+                setAssessmentText("");
+                setAssessmentFile(null);
+            }
+        };
+        checkSubmission();
+    }, [activeChapterId, course, user]);
 
     // Fetch Enrollment Data
     useEffect(() => {
@@ -214,6 +261,46 @@ export default function LearnPage() {
         setQuizPassed(false);
         setShowQuizResult(false);
         setIsQuizStarted(false);
+    };
+
+    const handleAssessmentSubmit = async () => {
+        if (!activeChapterId || !courseId || !user) return;
+        setAssessmentSubmitting(true);
+        try {
+            let fileUrl = "";
+            if (assessmentFile) {
+                const { ref, uploadBytes, getDownloadURL } = await import("firebase/storage");
+                const storageRef = ref(storage, `submissions/${user.uid}-${Date.now()}-${assessmentFile.name}`);
+                await uploadBytes(storageRef, assessmentFile);
+                fileUrl = await getDownloadURL(storageRef);
+            }
+
+            const token = await auth.currentUser?.getIdToken();
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/submissions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    courseId,
+                    chapterId: activeChapterId,
+                    textResponse: assessmentText,
+                    fileUrl
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setCurrentSubmission({id: data.id, ...data});
+                alert("Assessment submitted successfully!");
+            }
+        } catch (e) {
+            console.error("Submission failed", e);
+            alert("Failed to submit assessment.");
+        } finally {
+            setAssessmentSubmitting(false);
+        }
     };
 
     const getNextChapter = () => {
@@ -636,6 +723,86 @@ export default function LearnPage() {
                                                 )}
                                             </div>
                                         )}
+                                    </div>
+                                )}
+
+                                {/* Take-Home Assessment Section */}
+                                {activeChapter.content?.assessmentSection && (
+                                    <div className="mt-16 pt-8 border-t border-slate-200">
+                                        <h3 className="text-2xl font-bold mb-6 text-slate-900">Take-Home Assessment</h3>
+                                        
+                                        <div className="bg-purple-50 rounded-xl p-8 border border-purple-100 mb-8">
+                                            <h4 className="font-semibold text-purple-900 mb-2">Instructions</h4>
+                                            <p className="text-purple-800 whitespace-pre-wrap">{activeChapter.content.assessmentSection.instructions}</p>
+                                            
+                                            {activeChapter.content.assessmentSection.resources && activeChapter.content.assessmentSection.resources.length > 0 && (
+                                                <div className="mt-6">
+                                                    <h5 className="font-medium text-purple-900 mb-3 text-sm">Attached Resources / Templates</h5>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        {activeChapter.content.assessmentSection.resources.map(res => (
+                                                            <a key={res.id} href={res.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 bg-white rounded border border-purple-200 hover:border-purple-300 transition">
+                                                                <div className={`p-1.5 rounded ${res.type === 'pdf' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                                                                    {res.type === 'pdf' ? <FileText size={16} /> : <LinkIcon size={16} />}
+                                                                </div>
+                                                                <span className="text-sm font-medium text-purple-900 truncate">{res.title}</span>
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+                                            <div className="mb-6">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <label className="block text-sm font-medium text-slate-700">Your Response</label>
+                                                    {currentSubmission && (
+                                                        <span className="px-2.5 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700">
+                                                            {currentSubmission.graded ? `Graded: ${currentSubmission.score}/${activeChapter.content.assessmentSection.totalScore}` : 'Submitted'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <textarea
+                                                    value={assessmentText}
+                                                    onChange={e => setAssessmentText(e.target.value)}
+                                                    className="w-full p-4 border border-slate-300 rounded-lg outline-none focus:border-blue-500 min-h-[150px] resize-y text-slate-800"
+                                                    placeholder="Type your answer here..."
+                                                    disabled={currentSubmission?.graded}
+                                                />
+                                            </div>
+
+                                            <div className="mb-8">
+                                                <label className="block text-sm font-medium text-slate-700 mb-2">Upload File (Optional)</label>
+                                                {!currentSubmission?.graded && (
+                                                    <input 
+                                                        type="file" 
+                                                        onChange={e => setAssessmentFile(e.target.files ? e.target.files[0] : null)}
+                                                        className="block w-full text-sm text-slate-500
+                                                            file:mr-4 file:py-2 file:px-4
+                                                            file:rounded-full file:border-0
+                                                            file:text-sm file:font-semibold
+                                                            file:bg-blue-50 file:text-blue-700
+                                                            hover:file:bg-blue-100"
+                                                    />
+                                                )}
+                                                {currentSubmission?.fileUrl && (
+                                                    <a href={currentSubmission.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 mt-3 text-sm text-blue-600 hover:underline">
+                                                        <LinkIcon size={14} /> View Previously Submitted File
+                                                    </a>
+                                                )}
+                                            </div>
+
+                                            <div className="flex justify-end border-t border-slate-100 pt-6">
+                                                <button
+                                                    onClick={handleAssessmentSubmit}
+                                                    disabled={assessmentSubmitting || currentSubmission?.graded}
+                                                    className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2"
+                                                >
+                                                    {assessmentSubmitting && <Loader2 size={16} className="animate-spin" />}
+                                                    {currentSubmission ? 'Update Submission' : 'Submit Assessment'}
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 

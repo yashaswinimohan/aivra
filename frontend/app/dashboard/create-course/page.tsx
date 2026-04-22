@@ -225,12 +225,14 @@ function CreateCourseContent() {
                 } else if (shouldAdvanceStep) {
                     setStep(step + 1);
                 }
-            } finally {
-                setLoading(false);
+            } else {
+                console.error("Failed to save course");
+                alert("Failed to save course");
             }
         } catch (error) {
             console.error("Error saving course:", error);
             alert("Failed to save course");
+        } finally {
             setLoading(false);
         }
     };

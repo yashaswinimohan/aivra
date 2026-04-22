@@ -184,6 +184,9 @@ export default function CurriculumBuilder({ modules, onChange, onAutoSave }: Cur
                                                     {chapter.content.editorData?.blocks?.length > 0 && (
                                                         <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded font-medium border border-slate-200">TEXT</span>
                                                     )}
+                                                    {chapter.content.assessmentSection && (
+                                                        <span className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded font-medium border border-purple-200">ASSESSMENT</span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
