@@ -18,6 +18,8 @@ interface Course {
     title: string;
     description: string;
     modules?: Module[];
+    status?: string;
+    instructorId?: string;
 }
 
 export default function CourseDetail() {
