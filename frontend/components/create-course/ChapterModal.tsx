@@ -415,7 +415,7 @@ export default function ChapterModal({ isOpen, onClose, onSave, initialData }: C
                             </div>
 
                             {/* Resource Input Area */}
-                            {isResourceInputOpen && (
+                            {isResourceInputOpen && uploaderTarget === 'content' && (
                                 <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm mb-6 animate-in slide-in-from-top-2">
                                     <h4 className="text-sm font-semibold text-slate-900 mb-3">Add {resourceType === 'pdf' ? 'PDF Document' : 'External Link'}</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

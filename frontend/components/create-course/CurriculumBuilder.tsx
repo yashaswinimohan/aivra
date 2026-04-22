@@ -226,17 +226,19 @@ export default function CurriculumBuilder({ modules, onChange, onAutoSave }: Cur
                 ))}
             </div>
 
-            <ChapterModal
-                key={editingChapterId || 'new-chapter'}
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSave={handleSaveChapter}
-                initialData={
-                    currentModuleId && editingChapterId
-                        ? modules.find(m => m.id === currentModuleId)?.chapters.find(c => c.id === editingChapterId)
-                        : undefined
-                }
-            />
+            {isModalOpen && (
+                <ChapterModal
+                    key={editingChapterId || 'new-chapter'}
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={handleSaveChapter}
+                    initialData={
+                        currentModuleId && editingChapterId
+                            ? modules.find(m => m.id === currentModuleId)?.chapters.find(c => c.id === editingChapterId)
+                            : undefined
+                    }
+                />
+            )}
         </div>
     );
 }

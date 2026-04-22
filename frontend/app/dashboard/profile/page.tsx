@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BadgeCard, PointsDisplay, ProgressRing, CertificateCard, PortfolioCard } from '@/components/gamification';
+import DashboardLayout from '@/components/DashboardLayout';
 
 const roleOptions = ['Product Manager', 'UX Designer', 'Developer', 'Data Analyst', 'AI Engineer'];
 
@@ -189,17 +190,20 @@ export default function Profile() {
 
     if (!user) {
         return (
-            <div className="max-w-4xl mx-auto space-y-6">
-                <Skeleton className="h-48 rounded-2xl" />
-                <Skeleton className="h-32 rounded-2xl" />
-                <Skeleton className="h-32 rounded-2xl" />
-            </div>
+            <DashboardLayout>
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <Skeleton className="h-48 rounded-2xl" />
+                    <Skeleton className="h-32 rounded-2xl" />
+                    <Skeleton className="h-32 rounded-2xl" />
+                </div>
+            </DashboardLayout>
         );
     }
 
     return (
-        <div className="max-w-4xl mx-auto">
-            {/* Header */}
+        <DashboardLayout>
+            <div className="max-w-4xl mx-auto">
+                {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -715,5 +719,6 @@ export default function Profile() {
                 </DialogContent>
             </Dialog>
         </div>
+        </DashboardLayout>
     );
 }

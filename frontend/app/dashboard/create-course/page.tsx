@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Loader2, ChevronRight, Save } from "lucide-react";
+import { Check, Loader2, ChevronRight, Save, Sparkles } from "lucide-react";
 import CurriculumBuilder, { Module } from "@/components/create-course/CurriculumBuilder";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext"; // Assuming useAuth is from this path
@@ -46,6 +46,14 @@ function CreateCourseContent() {
         { id: '1', title: 'Introduction', description: 'Getting started with the course', chapters: [] }
     ]);
 
+    // Step 3: Certificate
+    const [certificateConfig, setCertificateConfig] = useState({
+        courseName: "",
+        skills: "",
+        instructorName: "",
+        designation: ""
+    });
+
     // Load Draft Data
     useEffect(() => {
         if (courseIdParam) {
@@ -80,6 +88,10 @@ function CreateCourseContent() {
                         if (data.modules && data.modules.length > 0) {
                             setModules(data.modules);
                         }
+
+                        if (data.certificate) {
+                            setCertificateConfig(data.certificate);
+                        }
                     }
                 } catch (error) {
                     console.error("Failed to load course", error);
@@ -103,7 +115,8 @@ function CreateCourseContent() {
     const steps = [
         { id: 1, title: "Project Details" },
         { id: 2, title: "Curriculum" },
-        { id: 3, title: "Review" },
+        { id: 3, title: "Certificate" },
+        { id: 4, title: "Review" },
     ];
 
     useEffect(() => {
@@ -124,6 +137,10 @@ function CreateCourseContent() {
                     router.push("/dashboard");
                 } else {
                     setIsAuthorized(true);
+                    setCertificateConfig(prev => ({
+                        ...prev,
+                        instructorName: prev.instructorName || currentUser.displayName || profile.displayName || ""
+                    }));
                 }
             } catch (error) {
                 console.error("Failed to check role:", error);
@@ -190,6 +207,7 @@ function CreateCourseContent() {
                 tags: tags.split(',').map(tag => tag.trim()).filter(t => t), // Convert string back to array
                 attachments,
                 modules: modulesOverride || modules, // Use override if provided, else state
+                certificate: certificateConfig,
                 status
             };
 
@@ -476,23 +494,23 @@ function CreateCourseContent() {
                                     {attachments.length > 0 && (
                                         <ul className="space-y-2">
                                             {attachments.map((att, index) => (
-                                                <li key={index} className="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200">
-                                                    <div className="flex items-center gap-3 overflow-hidden">
-                                                        <div className={`p-2 rounded-lg ${att.type === 'file' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                                                <li key={index} className="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 gap-4 min-w-0">
+                                                    <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
+                                                        <div className={`p-2 rounded-lg ${att.type === 'file' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'} shrink-0`}>
                                                             {att.type === 'file' ? (
                                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                                                             ) : (
                                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                                                             )}
                                                         </div>
-                                                        <div className="flex flex-col min-w-0">
-                                                            <span className="text-sm font-medium text-slate-900 truncate">{att.name}</span>
-                                                            <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 hover:text-blue-600 hover:underline truncate">
-                                                                {att.type === 'file' ? 'View Document' : att.url}
+                                                        <div className="min-w-0 flex-1">
+                                                            <span className="text-sm font-medium text-slate-900 truncate block w-full">{att.name}</span>
+                                                            <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 hover:text-blue-600 hover:underline block w-full" title={att.url}>
+                                                                {att.type === 'file' ? 'View Document' : (att.url.length > 60 ? att.url.substring(0, 60) + '...' : att.url)}
                                                             </a>
                                                         </div>
                                                     </div>
-                                                    <button type="button" onClick={() => removeAttachment(index)} className="p-1 text-slate-400 hover:text-red-500 transition">
+                                                    <button type="button" onClick={() => removeAttachment(index)} className="p-1 text-slate-400 hover:text-red-500 transition shrink-0">
                                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                                     </button>
                                                 </li>
@@ -564,7 +582,7 @@ function CreateCourseContent() {
                                     onClick={() => setStep(3)}
                                     className="px-8 py-2.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 font-semibold transition flex items-center gap-2"
                                 >
-                                    Continue to Review
+                                    Continue to Certificate
                                     <ChevronRight size={18} />
                                 </button>
                             </div>
@@ -574,6 +592,138 @@ function CreateCourseContent() {
                     {step === 3 && (
                         <motion.div
                             key="step3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="p-8"
+                        >
+                            <div className="space-y-8">
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-900 mb-2">Certificate of Completion</h2>
+                                    <p className="text-slate-500 mb-6">Configure the certificate that students will receive upon completing this course.</p>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2 text-slate-700">Course Name</label>
+                                            <input
+                                                type="text"
+                                                value={certificateConfig.courseName || title}
+                                                onChange={(e) => setCertificateConfig({ ...certificateConfig, courseName: e.target.value })}
+                                                className="w-full p-3 rounded-lg bg-white border border-slate-300 focus:border-blue-600 outline-none text-slate-900"
+                                                placeholder="e.g. Advanced AI Patterns"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2 text-slate-700">Top Skills Covered</label>
+                                            <input
+                                                type="text"
+                                                value={certificateConfig.skills}
+                                                onChange={(e) => setCertificateConfig({ ...certificateConfig, skills: e.target.value })}
+                                                className="w-full p-3 rounded-lg bg-white border border-slate-300 focus:border-blue-600 outline-none text-slate-900"
+                                                placeholder="e.g. React, Next.js, Node.js"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2 text-slate-700">Instructor Name</label>
+                                            <input
+                                                type="text"
+                                                value={certificateConfig.instructorName}
+                                                onChange={(e) => setCertificateConfig({ ...certificateConfig, instructorName: e.target.value })}
+                                                className="w-full p-3 rounded-lg bg-white border border-slate-300 focus:border-blue-600 outline-none text-slate-900"
+                                                placeholder="e.g. Yashaswini Mohan"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2 text-slate-700">Designation / Credentials</label>
+                                            <input
+                                                type="text"
+                                                value={certificateConfig.designation}
+                                                onChange={(e) => setCertificateConfig({ ...certificateConfig, designation: e.target.value })}
+                                                className="w-full p-3 rounded-lg bg-white border border-slate-300 focus:border-blue-600 outline-none text-slate-900"
+                                                placeholder="e.g. Lead Instructor, Aivra"
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="border-t border-slate-200 pt-8">
+                                        <h3 className="text-lg font-bold text-slate-900 mb-6">Certificate Preview</h3>
+                                        
+                                        {/* Certificate Preview Container */}
+                                        <div className="w-full max-w-4xl mx-auto border-[12px] border-slate-100 p-2 bg-white shadow-sm relative">
+                                            <div className="border border-slate-200 p-12 text-center relative overflow-hidden bg-white">
+                                                
+                                                {/* Decorative Elements */}
+                                                <div className="absolute top-0 left-0 w-32 h-32 border-t-4 border-l-4 border-teal-500/20" />
+                                                <div className="absolute bottom-0 right-0 w-32 h-32 border-b-4 border-r-4 border-purple-500/20" />
+                                                
+                                                {/* Aivra Logo */}
+                                                <div className="flex items-center justify-center gap-3 mb-10">
+                                                    <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-purple-500 text-white shadow-sm">
+                                                        <Sparkles className="size-6" />
+                                                    </div>
+                                                    <span className="font-bold text-2xl text-[#7a49e6] pb-0.5">Aivra</span>
+                                                </div>
+                                                
+                                                <h1 className="text-4xl md:text-5xl font-serif text-slate-800 mb-4 tracking-wide uppercase">Certificate of Completion</h1>
+                                                <p className="text-lg text-slate-500 uppercase tracking-widest mb-10">This is to certify that</p>
+                                                
+                                                <h2 className="text-3xl md:text-4xl font-bold text-slate-900 border-b border-slate-300 inline-block px-12 pb-2 mb-10">John Doe</h2>
+                                                
+                                                <p className="text-lg text-slate-600 mb-4">has successfully completed the course</p>
+                                                <h3 className="text-2xl font-bold text-blue-900 mb-6">{certificateConfig.courseName || title || '[Course Name]'}</h3>
+                                                
+                                                <div className="bg-slate-50 inline-block px-6 py-3 rounded-lg mb-12">
+                                                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-1">Skills Covered</p>
+                                                    <p className="text-slate-800 font-medium">{certificateConfig.skills || '[Skills will appear here]'}</p>
+                                                </div>
+                                                
+                                                <div className="flex justify-between items-end px-8 mt-8">
+                                                    <div className="text-left">
+                                                        <p className="text-lg font-bold text-slate-800 border-b border-slate-300 pb-1 mb-2 px-4">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                                                        <p className="text-sm text-slate-500 uppercase tracking-wider text-center">Date</p>
+                                                    </div>
+                                                    
+                                                    <div className="text-center min-w-[200px]">
+                                                        <div className="border-b border-slate-300 pb-1 mb-2 relative h-16 flex items-end justify-center">
+                                                            {certificateConfig.instructorName ? (
+                                                                <span className="text-4xl text-slate-800" style={{ fontFamily: "'Brush Script MT', 'Cedarville Cursive', cursive" }}>{certificateConfig.instructorName}</span>
+                                                            ) : (
+                                                                <span className="text-slate-300 italic text-sm">Signature</span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-base font-bold text-slate-800">{certificateConfig.instructorName || '[Instructor Name]'}</p>
+                                                        <p className="text-sm text-slate-500">{certificateConfig.designation || '[Designation]'}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div className="mt-8 flex justify-between pt-6 border-t border-slate-100">
+                                    <button
+                                        onClick={() => setStep(2)}
+                                        className="px-6 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 font-medium transition"
+                                    >
+                                        Back
+                                    </button>
+                                    <button
+                                        onClick={() => setStep(4)}
+                                        className="px-8 py-2.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 font-semibold transition flex items-center gap-2"
+                                    >
+                                        Continue to Review
+                                        <ChevronRight size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {step === 4 && (
+                        <motion.div
+                            key="step4"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -588,7 +738,7 @@ function CreateCourseContent() {
 
                                 <div className="flex justify-between">
                                     <button
-                                        onClick={() => setStep(2)}
+                                        onClick={() => setStep(3)}
                                         className="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100"
                                     >
                                         Back
