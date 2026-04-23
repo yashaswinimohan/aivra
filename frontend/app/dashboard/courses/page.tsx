@@ -199,8 +199,8 @@ export default function Courses() {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredCourses.map((course) => {
                             const progress = getProgress(course.id, course.modules);
-                            const isEnrolled = enrollments.some(e => e.courseId === course.id);
                             const isCourseOwner = course.instructorId === userId;
+                            const isEnrolled = enrollments.some(e => e.courseId === course.id) && !isCourseOwner;
 
                             return (
                                 <div key={course.id} className="bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-blue-500/50 transition group shadow-sm relative flex flex-col h-full">
@@ -216,13 +216,19 @@ export default function Courses() {
                                         )}
                                     </div>
                                     <div className="p-6 flex flex-col flex-grow">
-                                        {(userRole === 'professor' || userRole === 'admin') && course.status === 'published' && (
+                                        {(isCourseOwner || userRole === 'admin') && course.status === 'published' && (
                                             <span className="absolute top-3 right-3 bg-emerald-100 text-emerald-600 text-xs font-bold px-2 py-1 rounded-full shadow-sm z-10">
                                                 PUBLISHED
                                             </span>
                                         )}
 
-                                        <Link href={`/dashboard/courses/${course.id}`}>
+                                        <Link href={
+                                            course.status === 'draft'
+                                                ? `/dashboard/create-course?courseId=${course.id}`
+                                                : userRole === 'professor' && isCourseOwner
+                                                    ? `/dashboard/courses/${course.id}/manage`
+                                                    : `/dashboard/courses/${course.id}`
+                                        }>
                                             <div className="flex justify-between items-start mb-2">
                                                 <h3 className="text-xl font-bold group-hover:text-blue-600 transition cursor-pointer">{course.title}</h3>
                                             </div>

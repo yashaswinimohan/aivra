@@ -77,7 +77,7 @@ exports.promoteToAdmin = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
     try {
         const userId = req.user.uid;
-        const { displayName, first_name, last_name, roles, skills, bio } = req.body;
+        const { displayName, first_name, last_name, roles, skills, bio, profileLinks } = req.body;
 
         const userData = {
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -95,11 +95,43 @@ exports.updateUserProfile = async (req, res) => {
         if (roles !== undefined) userData.roles = roles;
         if (skills !== undefined) userData.skills = skills;
         if (bio !== undefined) userData.bio = bio;
+        if (profileLinks !== undefined) userData.profileLinks = profileLinks;
 
         userData.isOnboardingComplete = true;
 
         await db.collection('users').doc(userId).set(userData, { merge: true });
         res.status(200).json({ message: 'User profile updated', ...userData });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get public user profile by ID
+exports.getPublicProfileById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const doc = await db.collection('users').doc(id).get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'User profile not found' });
+        }
+
+        const data = doc.data();
+        
+        // Return only safe public fields
+        const publicProfile = {
+            id: doc.id,
+            displayName: data.displayName || '',
+            first_name: data.first_name || data.firstName || '',
+            last_name: data.last_name || data.lastName || '',
+            full_name: data.full_name || `${data.firstName || ''} ${data.lastName || ''}`.trim() || '',
+            bio: data.bio || '',
+            roles: data.roles || [],
+            skills: data.skills || [],
+            profileLinks: data.profileLinks || []
+        };
+
+        res.status(200).json(publicProfile);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

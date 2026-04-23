@@ -50,6 +50,7 @@ export default function Profile() {
         bio: string;
         roles: string[];
         skills: string[];
+        profileLinks: string[];
     }
 
     const [editData, setEditData] = useState<EditData>({
@@ -57,9 +58,11 @@ export default function Profile() {
         last_name: '',
         bio: '',
         roles: [],
-        skills: []
+        skills: [],
+        profileLinks: []
     });
     const [newSkill, setNewSkill] = useState('');
+    const [newLink, setNewLink] = useState('');
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
@@ -72,7 +75,8 @@ export default function Profile() {
                         last_name: response.data.last_name || response.data.lastName || '',
                         bio: response.data.bio || '',
                         roles: response.data.roles || [],
-                        skills: response.data.skills || []
+                        skills: response.data.skills || [],
+                        profileLinks: response.data.profileLinks || []
                     });
                 } catch (error) {
                     console.error("Failed to load user profile:", error);
@@ -178,6 +182,17 @@ export default function Profile() {
 
     const removeSkill = (skill: string) => {
         setEditData({ ...editData, skills: editData.skills.filter((s: string) => s !== skill) });
+    };
+
+    const addLink = () => {
+        if (newLink && !editData.profileLinks.includes(newLink)) {
+            setEditData({ ...editData, profileLinks: [...editData.profileLinks, newLink] });
+            setNewLink('');
+        }
+    };
+
+    const removeLink = (link: string) => {
+        setEditData({ ...editData, profileLinks: editData.profileLinks.filter((l: string) => l !== link) });
     };
 
     const toggleRole = (role: string) => {
@@ -704,6 +719,33 @@ export default function Profile() {
                                             onClick={() => removeSkill(skill)}
                                         />
                                     </Badge>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Profile Links */}
+                        <div>
+                            <label className="text-sm font-medium text-slate-700 mb-2 block">Social / Profile Links</label>
+                            <div className="flex gap-2 mb-3">
+                                <Input
+                                    value={newLink}
+                                    onChange={(e) => setNewLink(e.target.value)}
+                                    placeholder="https://linkedin.com/in/..."
+                                    onKeyPress={(e) => e.key === 'Enter' && addLink()}
+                                />
+                                <Button onClick={addLink} size="icon" variant="outline">
+                                    <Plus className="w-4 h-4" />
+                                </Button>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                {editData.profileLinks.map((link, i) => (
+                                    <div key={i} className="flex items-center justify-between p-2 border border-slate-200 rounded-lg bg-slate-50">
+                                        <span className="text-sm text-slate-600 truncate">{link}</span>
+                                        <X
+                                            className="w-4 h-4 cursor-pointer text-slate-400 hover:text-red-600"
+                                            onClick={() => removeLink(link)}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         </div>

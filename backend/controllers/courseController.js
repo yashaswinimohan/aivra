@@ -27,7 +27,13 @@ const syncAssignments = async (courseId, modules) => {
 // Get all courses
 exports.getAllCourses = async (req, res) => {
     try {
-        const snapshot = await db.collection('courses').get();
+        let query = db.collection('courses');
+        
+        if (req.query.instructorId) {
+            query = query.where('instructorId', '==', req.query.instructorId);
+        }
+
+        const snapshot = await query.get();
         const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         res.status(200).json(courses);
     } catch (error) {
@@ -42,7 +48,16 @@ exports.getCourseById = async (req, res) => {
         if (!doc.exists) {
             return res.status(404).json({ message: 'Course not found' });
         }
-        res.status(200).json({ id: doc.id, ...doc.data() });
+        const courseData = doc.data();
+        let instructorName = "Unknown Instructor";
+        if (courseData.instructorId) {
+            const instructorDoc = await db.collection('users').doc(courseData.instructorId).get();
+            if (instructorDoc.exists) {
+                const iData = instructorDoc.data();
+                instructorName = iData.displayName || iData.full_name || `${iData.firstName || ''} ${iData.lastName || ''}`.trim() || iData.email || "Instructor";
+            }
+        }
+        res.status(200).json({ id: doc.id, ...courseData, instructorName });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
