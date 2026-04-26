@@ -2,9 +2,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, FileText, Link as LinkIcon, Menu, X, CheckCircle, PlayCircle, Lock, Upload, Loader2 } from "lucide-react";
+import { ChevronLeft, FileText, Link as LinkIcon, Menu, X, CheckCircle, PlayCircle, Lock, Upload, Loader2, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { auth, storage } from "@/lib/firebase";
+import { CertificateCard } from "@/components/gamification/CertificateCard";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ChapterResource {
     id: string;
@@ -60,6 +62,7 @@ export default function LearnPage() {
     const params = useParams();
     const router = useRouter();
     const courseId = params.id as string;
+    const { toast } = useToast();
 
     const { user } = useAuth(); // Import useAuth
     const [completedChapters, setCompletedChapters] = useState<string[]>([]);
@@ -122,8 +125,11 @@ export default function LearnPage() {
             if (chapter?.content?.assessmentSection) {
                 try {
                     const token = await auth.currentUser?.getIdToken();
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/submissions/chapter/${activeChapterId}`, {
-                        headers: { Authorization: `Bearer ${token}` }
+                    const timestamp = Date.now();
+                    console.log(`[Submission] Checking for chapter ${activeChapterId} at ${timestamp}`);
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/submissions/chapter/${activeChapterId}?t=${timestamp}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                        cache: 'no-store'
                     });
                     if (res.ok) {
                         const data = await res.json();
@@ -177,14 +183,11 @@ export default function LearnPage() {
         else setProgress(Math.round((completedChapters.length / totalChapters) * 100));
     }, [completedChapters, course]);
 
-    const handleToggleComplete = async () => {
+    const markAsComplete = async () => {
         if (!activeChapterId || !user) return;
+        if (completedChapters.includes(activeChapterId)) return;
 
-        const isCompleted = completedChapters.includes(activeChapterId);
-        const newCompleted = isCompleted
-            ? completedChapters.filter(id => id !== activeChapterId)
-            : [...completedChapters, activeChapterId];
-
+        const newCompleted = [...completedChapters, activeChapterId];
         setCompletedChapters(newCompleted); // Optimistic update
 
         try {
@@ -197,7 +200,7 @@ export default function LearnPage() {
                 },
                 body: JSON.stringify({
                     chapterId: activeChapterId,
-                    isCompleted: !isCompleted
+                    isCompleted: true
                 })
             });
         } catch (error) {
@@ -250,8 +253,11 @@ export default function LearnPage() {
         setQuizPassed(passed);
         setShowQuizResult(true);
 
-        if (passed && !completedChapters.includes(activeChapterId)) {
-            await handleToggleComplete(); // Mark as complete
+        const passingScoreAssessment = activeChapter.content?.assessmentSection?.passingScore || 70;
+        const hasUnpassedAssessment = activeChapter.content?.assessmentSection && (!currentSubmission || !currentSubmission.graded || currentSubmission.score < passingScoreAssessment);
+
+        if (passed && !completedChapters.includes(activeChapterId) && !hasUnpassedAssessment) {
+            await markAsComplete(); // Mark as complete
         }
     };
 
@@ -339,7 +345,10 @@ export default function LearnPage() {
 
     const nextChapter = getNextChapter();
 
-    const handleNext = () => {
+    const handleNext = async () => {
+        if (!completedChapters.includes(activeChapterId!)) {
+            await markAsComplete();
+        }
         if (nextChapter) {
             setActiveModuleId(nextChapter.moduleId);
             setActiveChapterId(nextChapter.chapterId);
@@ -347,8 +356,11 @@ export default function LearnPage() {
         }
     };
 
-    const handleFinish = () => {
-        router.push('/dashboard/courses');
+    const handleFinishCourseClick = async () => {
+        if (!completedChapters.includes(activeChapterId!)) {
+            await markAsComplete();
+        }
+        router.push(`/dashboard/courses/${courseId}/certificate`);
     };
 
     // Initialize Editor for Reading
@@ -368,6 +380,7 @@ export default function LearnPage() {
                 const InlineCode = (await import("@editorjs/inline-code")).default;
                 const Underline = (await import("@editorjs/underline")).default;
                 const AlignmentTuneTool = (await import("editorjs-text-alignment-blocktune")).default;
+                const ImageTool = (await import("@editorjs/image")).default;
 
                 if (!editorInstanceRef.current) {
                     const editor = new EditorJS({
@@ -399,11 +412,20 @@ export default function LearnPage() {
                             marker: Marker,
                             inlineCode: InlineCode,
                             underline: Underline,
+                            image: {
+                                class: ImageTool,
+                                config: {
+                                    uploader: {
+                                        // Read-only mode doesn't need uploader, but good to have config matching
+                                    }
+                                },
+                                tunes: ['alignment'],
+                            },
                             alignment: {
                                 class: AlignmentTuneTool,
                                 config: {
                                     default: "left",
-                                    blocks: { header: 'center', list: 'right' }
+                                    blocks: { header: 'center', list: 'right', image: 'center' }
                                 },
                             }
                         },
@@ -570,28 +592,7 @@ export default function LearnPage() {
                             <div className="animate-in fade-in duration-500">
                                 <div className="flex items-center justify-between mb-8">
                                     <h2 className="text-3xl font-bold text-slate-900">{activeChapter.title}</h2>
-                                    {!activeChapter.content?.mcqSection ? (
-                                        <button
-                                            onClick={handleToggleComplete}
-                                            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all
-                                                ${completedChapters.includes(activeChapter.id)
-                                                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                                                    : 'bg-slate-900 text-white hover:bg-slate-800 shadow-md hover:shadow-lg'}
-                                            `}
-                                        >
-                                            {completedChapters.includes(activeChapter.id) ? (
-                                                <>
-                                                    <CheckCircle size={18} />
-                                                    Completed
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className="w-4 h-4 rounded-full border-2 border-white/50" />
-                                                    Mark as Complete
-                                                </>
-                                            )}
-                                        </button>
-                                    ) : (
+                                    {activeChapter.content?.mcqSection && (
                                         <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2
                                             ${completedChapters.includes(activeChapter.id)
                                                 ? 'bg-emerald-100 text-emerald-700'
@@ -758,7 +759,7 @@ export default function LearnPage() {
                                                     <label className="block text-sm font-medium text-slate-700">Your Response</label>
                                                     {currentSubmission && (
                                                         <span className="px-2.5 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700">
-                                                            {currentSubmission.graded ? `Graded: ${currentSubmission.score}/${activeChapter.content.assessmentSection.totalScore}` : 'Submitted'}
+                                                             {currentSubmission.graded ? `Graded: ${currentSubmission.score}/${activeChapter.content.assessmentSection.totalScore || 100}` : 'Submitted'}
                                                         </span>
                                                     )}
                                                 </div>
@@ -770,6 +771,13 @@ export default function LearnPage() {
                                                     disabled={currentSubmission?.graded}
                                                 />
                                             </div>
+
+                                            {currentSubmission?.graded && currentSubmission?.feedback && (
+                                                <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                                                    <label className="block text-xs font-bold text-blue-800 uppercase tracking-wider mb-2">Instructor Feedback</label>
+                                                    <p className="text-sm text-blue-700 italic">{currentSubmission.feedback}</p>
+                                                </div>
+                                            )}
 
                                             <div className="mb-8">
                                                 <label className="block text-sm font-medium text-slate-700 mb-2">Upload File (Optional)</label>
@@ -807,27 +815,33 @@ export default function LearnPage() {
                                 )}
 
                                 {/* Bottom Navigation */}
-                                {(completedChapters.includes(activeChapter.id) || !activeChapter.content?.mcqSection) && (
-                                    <div className="mt-16 flex justify-end pt-8 border-t border-slate-200">
-                                        {nextChapter ? (
+                                <div className="mt-16 pt-8 border-t border-slate-200">
+                                    {nextChapter ? (
+                                        <div className="flex justify-end">
+                                            {((completedChapters.includes(activeChapter.id) || (!activeChapter.content?.mcqSection || quizPassed)) && 
+                                                (!activeChapter.content?.assessmentSection || (currentSubmission?.graded && currentSubmission?.score >= (activeChapter.content.assessmentSection.passingScore || 70)))
+                                            ) && (
+                                                <button
+                                                    onClick={handleNext}
+                                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center gap-2"
+                                                >
+                                                    Next: {nextChapter.title}
+                                                    <ChevronLeft size={20} className="rotate-180" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex justify-end">
                                             <button
-                                                onClick={handleNext}
-                                                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center gap-2"
-                                            >
-                                                Next: {nextChapter.title}
-                                                <ChevronLeft size={20} className="rotate-180" />
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={handleFinish}
-                                                className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium flex items-center gap-2"
+                                                onClick={handleFinishCourseClick}
+                                                className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium flex items-center gap-2 shadow-lg"
                                             >
                                                 Finish Course
                                                 <CheckCircle size={20} />
                                             </button>
-                                        )}
-                                    </div>
-                                )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ) : (
                             <div className="text-center py-20">

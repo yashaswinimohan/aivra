@@ -82,16 +82,29 @@ exports.updateProgress = async (req, res) => {
             completedChapters = completedChapters.filter(id => id !== chapterId);
         }
 
-        // Calculate progress (optional, can be done securely if we fetch course metadata here, 
-        // or just store completed chapters and let frontend/calc handle %)
-        // For now, let's just save the list.
+        // Calculate progress dynamically
+        let progress = data.progress || 0;
+        try {
+            const courseRef = db.collection('courses').doc(courseId);
+            const courseDoc = await courseRef.get();
+            if (courseDoc.exists) {
+                const courseData = courseDoc.data();
+                const totalChapters = (courseData.modules || []).reduce((acc, m) => acc + (m.chapters?.length || 0), 0);
+                if (totalChapters > 0) {
+                    progress = Math.round((completedChapters.length / totalChapters) * 100);
+                }
+            }
+        } catch (err) {
+            console.error("Progress calc error:", err);
+        }
 
         await enrollmentRef.update({
             completedChapters,
+            progress,
             lastAccessedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        res.status(200).json({ message: "Progress updated", completedChapters });
+        res.status(200).json({ message: "Progress updated", completedChapters, progress });
 
     } catch (error) {
         res.status(500).json({ message: error.message });

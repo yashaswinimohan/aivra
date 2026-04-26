@@ -92,13 +92,24 @@ export default function Dashboard() {
         queryKey: ['topUsers'],
         queryFn: async () => (await api.get('/userpointss')).data,
     });
+    
+    const { data: certificates = [] } = useQuery({
+        queryKey: ['certificates', user?.email],
+        queryFn: async () => (await api.get('/certificates', { params: { user_email: user?.email } })).data,
+        enabled: !!user?.email,
+    });
 
     const enrolledCourses = courses.filter((c: any) =>
-        enrollments.some((e: any) => e.course_id === c.id)
-    ).map((course: any) => ({
-        ...course,
-        progress: enrollments.find((e: any) => e.course_id === course.id)?.progress || 0
-    }));
+        enrollments.some((e: any) => (e.courseId || e.course_id) === c.id)
+    ).map((course: any) => {
+        const enrollment = enrollments.find((e: any) => (e.courseId || e.course_id) === course.id);
+        const hasCertificate = certificates.some((cert: any) => cert.reference_id === course.id && cert.type === 'course');
+        
+        return {
+            ...course,
+            progress: hasCertificate ? 100 : (enrollment?.progress || 0)
+        };
+    });
 
     const userProjects = projects.filter((p: any) =>
         memberships.some((m: any) => m.project_id === p.id)

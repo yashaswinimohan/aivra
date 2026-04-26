@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/lib/AuthContext";
+import { auth } from "@/lib/firebase";
 import { Settings, Users, FileText, ChevronLeft, Eye, EyeOff, Archive } from "lucide-react";
 
 interface Course {
@@ -47,7 +48,7 @@ export default function ManageCourse() {
         if (!confirm(`Are you sure you want to ${newStatus === 'draft' ? 'unpublish' : 'archive'} this course?`)) return;
 
         try {
-            const token = await user?.getIdToken();
+            const token = await auth.currentUser?.getIdToken();
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses/${courseId}`, {
                 method: "PUT",
                 headers: {

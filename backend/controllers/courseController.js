@@ -82,6 +82,7 @@ exports.createCourse = async (req, res) => {
             level: level || 'Beginner',
             status: req.body.status || 'published',
             modules: req.body.modules || [], // Include modules
+            certificate: req.body.certificate || null, // Include certificate config
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         };
         const docRef = await db.collection('courses').add(newCourse);

@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/lib/AuthContext";
+import { auth } from "@/lib/firebase";
 import { Users, ChevronLeft, Trash2, Calendar, Mail, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ export default function ManageStudents() {
         const fetchStudents = async () => {
             if (!courseId) return;
             try {
-                const token = await user?.getIdToken();
+                const token = await auth.currentUser?.getIdToken();
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/enrollments/course/${courseId}/students`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -46,7 +47,7 @@ export default function ManageStudents() {
         }
 
         try {
-            const token = await user?.getIdToken();
+            const token = await auth.currentUser?.getIdToken();
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/enrollments/${enrollmentId}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }

@@ -53,6 +53,7 @@ exports.issueCertificate = async (req, res) => {
 
         const newCert = {
             user_email,
+            userName: req.body.userName || '', // Store the name snapshot
             type, // 'course' or 'project'
             reference_id, // course_id or project_id
             title,

@@ -139,9 +139,14 @@ export default function Profile() {
         enabled: !!user?.email,
     });
 
-    const completedEnrollments = enrollments.filter((e: any) => e.progress >= 100);
+    const completedEnrollments = enrollments.filter((e: any) => {
+        // Check progress or if a certificate exists (source of truth)
+        const isProgressComplete = (e.progress || 0) >= 100;
+        const hasCertificate = certificates.some((cert: any) => cert.reference_id === (e.courseId || e.course_id) && cert.type === 'course');
+        return isProgressComplete || hasCertificate;
+    });
     const completedCourses = courses.filter((c: any) =>
-        completedEnrollments.some((e: any) => e.course_id === c.id)
+        completedEnrollments.some((e: any) => (e.courseId || e.course_id) === c.id)
     );
 
     const userProjects = projects.filter((p: any) =>
@@ -506,7 +511,6 @@ export default function Profile() {
                                             </div>
                                             <div className="flex-1">
                                                 <p className="font-medium text-slate-900">{course.title}</p>
-                                                <p className="text-sm text-slate-500">{course.category} • {course.level}</p>
                                             </div>
                                             <div className="flex flex-col gap-2 items-end">
                                                 <Badge className="bg-emerald-100 text-emerald-700 border-0">Completed</Badge>
@@ -603,9 +607,24 @@ export default function Profile() {
                             </CardHeader>
                             <CardContent>
                                 <div className="grid sm:grid-cols-2 gap-4">
-                                    {certificates.filter((c: any) => c.type === 'course').map((cert: any) => (
-                                        <CertificateCard key={cert.id} certificate={cert} />
-                                    ))}
+                                    {certificates.filter((c: any) => c.type === 'course').map((cert: any) => {
+                                        // Find corresponding course to get instructor details
+                                        const course = courses.find((crs: any) => crs.id === cert.reference_id);
+                                        return (
+                                            <CertificateCard 
+                                                key={cert.id} 
+                                                certificate={{
+                                                    ...cert, 
+                                                    userName: user.full_name || user.displayName || user.email,
+                                                    instructorName: course?.certificate?.instructorName || course?.instructorName || 'Lead Instructor',
+                                                    designation: course?.certificate?.designation || 'Aivra Academy',
+                                                    skills: (cert.skills && cert.skills.length > 0) 
+                                                        ? (Array.isArray(cert.skills) ? cert.skills.join(', ') : cert.skills)
+                                                        : (course?.certificate?.skills || "")
+                                                }} 
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </CardContent>
                         </Card>
@@ -631,9 +650,22 @@ export default function Profile() {
                                     {certificates.filter((c: any) => c.type === 'project').map((portfolio: any) => (
                                         <PortfolioCard key={portfolio.id} portfolioItem={portfolio} />
                                     ))}
-                                    {certificates.filter((c: any) => c.type === 'project').map((cert: any) => (
-                                        <CertificateCard key={`cert-${cert.id}`} certificate={{...cert, title: cert.title + " Certificate"}} />
-                                    ))}
+                                    {certificates.filter((c: any) => c.type === 'project').map((cert: any) => {
+                                        const project = projects.find((p: any) => p.id === cert.reference_id);
+                                        return (
+                                            <CertificateCard 
+                                                key={`cert-${cert.id}`} 
+                                                certificate={{
+                                                    ...cert, 
+                                                    title: cert.title + " Certificate",
+                                                    userName: user.full_name || user.displayName || user.email,
+                                                    instructorName: project?.mentorName || 'Project Lead',
+                                                    designation: 'Portfolio Credit',
+                                                    skills: cert.skills?.join(', ') || project?.tags?.join(', ') || ""
+                                                }} 
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </CardContent>
                         </Card>

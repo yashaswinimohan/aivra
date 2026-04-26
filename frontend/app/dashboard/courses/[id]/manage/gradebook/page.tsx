@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/lib/AuthContext";
+import { auth } from "@/lib/firebase";
 import { BookOpen, ChevronLeft, Plus, Save, FileText, LinkIcon, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ export default function Gradebook() {
         const fetchAll = async () => {
             if (!courseId || !user) return;
             try {
-                const token = await user.getIdToken();
+                const token = await auth.currentUser?.getIdToken();
                 const headers = { Authorization: `Bearer ${token}` };
 
                 const [resStudents, resAssignments, resGrades, resSubmissions] = await Promise.all([
@@ -58,7 +59,7 @@ export default function Gradebook() {
         const maxPoints = maxPointsStr ? parseInt(maxPointsStr) : 100;
 
         try {
-            const token = await user?.getIdToken();
+            const token = await auth.currentUser?.getIdToken();
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assignments`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -77,8 +78,8 @@ export default function Gradebook() {
         try {
             const numScore = parseFloat(score);
             if (isNaN(numScore)) return;
-
-            const token = await user?.getIdToken();
+    
+            const token = await auth.currentUser?.getIdToken();
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/grades`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

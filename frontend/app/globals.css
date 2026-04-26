@@ -82,6 +82,13 @@ body {
   text-align: left !important;
 }
 
+/* Hide empty image captions in read-only editor */
+#read-only-editor .image-tool__caption[data-empty="true"],
+#read-only-editor .image-tool__caption:empty,
+#read-only-editor .image-tool__caption:has(br:only-child) {
+  display: none !important;
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -157,5 +164,11 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .clip-path-ribbon {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 85%, 0% 100%);
   }
 }

@@ -9,6 +9,7 @@ exports.upsertGrade = async (req, res) => {
         if (!assignmentId || !userId || score === undefined) {
              return res.status(400).json({ message: 'assignmentId, userId, and score are required' });
         }
+        console.log(`[Gradebook] Grading user ${userId} for assignment ${assignmentId}`);
 
         const gradeId = `${userId}_${assignmentId}`;
         const gradeRef = db.collection('grades').doc(gradeId);
@@ -22,6 +23,43 @@ exports.upsertGrade = async (req, res) => {
         };
 
         await gradeRef.set(gradeData, { merge: true });
+
+        // Sync with submissions if it's an auto-generated assessment from a chapter
+        if (assignmentId.startsWith('assessment_')) {
+            console.log(`[Sync] upsertGrade: detected auto-generated assignment ${assignmentId}`);
+            try {
+                const assignmentDoc = await db.collection('assignments').doc(assignmentId).get();
+                if (assignmentDoc.exists) {
+                    const { chapterId } = assignmentDoc.data();
+                    if (chapterId) {
+                        const submissionId = `${userId}_${chapterId}`;
+                        const submissionRef = db.collection('submissions').doc(submissionId);
+                        const subDoc = await submissionRef.get();
+                        
+                        if (subDoc.exists) {
+                            console.log(`[Sync] Updating submission ${submissionId} for user ${userId}`);
+                            await submissionRef.update({
+                                graded: true,
+                                score: parseFloat(score),
+                                feedback: feedback || '',
+                                gradedAt: admin.firestore.FieldValue.serverTimestamp(),
+                                gradedBy: req.user?.uid || 'instructor'
+                            });
+                            console.log(`[Sync] Successfully updated submission ${submissionId}. Graded: true`);
+                        } else {
+                            console.log(`[Sync Skip] No submission doc found for ${submissionId}`);
+                        }
+                    } else {
+                        console.log(`[Sync Skip] No chapterId in assignment ${assignmentId}`);
+                    }
+                } else {
+                    console.log(`[Sync Skip] Assignment doc ${assignmentId} not found`);
+                }
+            } catch (syncError) {
+                console.error("Error syncing grade to submission:", syncError);
+            }
+        }
+
         res.status(200).json({ id: gradeId, ...gradeData });
     } catch (error) {
         res.status(500).json({ message: error.message });
