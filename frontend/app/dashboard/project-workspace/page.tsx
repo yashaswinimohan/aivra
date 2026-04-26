@@ -98,6 +98,7 @@ function ProjectWorkspace() {
     const [inviteRole, setInviteRole] = useState('');
     const [newTask, setNewTask] = useState({ title: '', deadline: '', assignee: '', priority: 'medium', milestone_id: '', status: 'todo' });
     const [showAddTask, setShowAddTask] = useState(false);
+    const [showCompleteDialog, setShowCompleteDialog] = useState(false);
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
@@ -244,6 +245,20 @@ function ProjectWorkspace() {
             refetchProject();
             setShowJoinDialog(false);
         },
+    });
+
+    const completeProjectMutation = useMutation({
+        mutationFn: async () => {
+            return api.put(`/projects/${projectId}/complete`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+            setShowCompleteDialog(false);
+            alert('Project marked as completed! Points and certificates have been awarded to all team members.');
+        },
+        onError: (err: any) => {
+            alert(err.response?.data?.message || 'Failed to complete project');
+        }
     });
 
     const leaveMutation = useMutation({
@@ -438,6 +453,42 @@ function ProjectWorkspace() {
                                 Project Settings
                             </Button>
                         </Link>
+                        
+                        {isOwner && project.status !== 'Completed' && (
+                            <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto">
+                                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                                        Mark as Completed
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Complete Project</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <p className="text-slate-600">
+                                            Are you sure you want to mark this project as completed? This action will:
+                                        </p>
+                                        <ul className="list-disc pl-5 text-sm text-slate-600 space-y-1">
+                                            <li>Update the project status to <strong>Completed</strong>.</li>
+                                            <li>Award <strong>100 points</strong> to all valid team members.</li>
+                                            <li>Issue a <strong>Portfolio Credit Certificate</strong> to all team members.</li>
+                                        </ul>
+                                        <div className="flex justify-end gap-3 pt-4">
+                                            <Button variant="outline" onClick={() => setShowCompleteDialog(false)}>Cancel</Button>
+                                            <Button 
+                                                className="bg-emerald-600 hover:bg-emerald-700"
+                                                onClick={() => completeProjectMutation.mutate()}
+                                                disabled={completeProjectMutation.isPending}
+                                            >
+                                                {completeProjectMutation.isPending ? 'Completing...' : 'Yes, Complete Project'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        )}
                     </div>
                 ) : pendingMembership ? (
                     <Button disabled variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">

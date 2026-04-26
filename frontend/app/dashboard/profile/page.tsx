@@ -33,7 +33,8 @@ import {
     Trophy,
     Zap,
     Flame,
-    Target
+    Target,
+    Globe
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BadgeCard, PointsDisplay, ProgressRing, CertificateCard, PortfolioCard } from '@/components/gamification';
@@ -51,6 +52,8 @@ export default function Profile() {
         roles: string[];
         skills: string[];
         profileLinks: string[];
+        showcaseProjects: string[];
+        showcaseCourses: string[];
     }
 
     const [editData, setEditData] = useState<EditData>({
@@ -59,7 +62,9 @@ export default function Profile() {
         bio: '',
         roles: [],
         skills: [],
-        profileLinks: []
+        profileLinks: [],
+        showcaseProjects: [],
+        showcaseCourses: []
     });
     const [newSkill, setNewSkill] = useState('');
     const [newLink, setNewLink] = useState('');
@@ -76,7 +81,9 @@ export default function Profile() {
                         bio: response.data.bio || '',
                         roles: response.data.roles || [],
                         skills: response.data.skills || [],
-                        profileLinks: response.data.profileLinks || []
+                        profileLinks: response.data.profileLinks || [],
+                        showcaseProjects: response.data.showcaseProjects || [],
+                        showcaseCourses: response.data.showcaseCourses || []
                     });
                 } catch (error) {
                     console.error("Failed to load user profile:", error);
@@ -150,9 +157,14 @@ export default function Profile() {
     );
 
     const userProjects = projects.filter((p: any) =>
-        memberships.some((m: any) => m.project_id === p.id)
+        memberships.some((m: any) => m.project_id === p.id) ||
+        certificates.some((cert: any) => cert.reference_id === p.id && cert.type === 'project')
     );
-    const completedProjects = userProjects.filter((p: any) => p.status === 'Completed');
+    const completedProjects = projects.filter((p: any) => {
+        const isMemberComplete = memberships.some((m: any) => m.project_id === p.id) && p.status === 'Completed';
+        const hasCertificate = certificates.some((cert: any) => cert.reference_id === p.id && cert.type === 'project');
+        return isMemberComplete || hasCertificate;
+    });
 
     const earnedBadgeIds = userBadges.map((ub: any) => ub.badge_id);
     const earnedBadges = badges.filter((b: any) => earnedBadgeIds.includes(b.id));
@@ -558,30 +570,29 @@ export default function Profile() {
                             ) : (
                                 <div className="space-y-3">
                                     {completedProjects.map((project: any) => (
-                                        <div key={project.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
-                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-400 to-rose-500 flex items-center justify-center">
-                                                <Briefcase className="w-5 h-5 text-white" />
+                                        <div key={project.id} className="flex flex-col md:flex-row items-center gap-4 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0">
+                                                <Briefcase className="w-6 h-6 text-white" />
                                             </div>
-                                            <div className="flex-1">
-                                                <p className="font-medium text-slate-900">{project.title}</p>
-                                                <p className="text-sm text-slate-500">{project.duration}</p>
+                                            <div className="flex-1 min-w-0 text-center md:text-left">
+                                                <p className="font-bold text-slate-900 text-lg line-clamp-1">{project.title}</p>
+                                                <p className="text-sm text-slate-500 line-clamp-1">{project.description || "Project completed successfully"}</p>
                                             </div>
-                                            <div className="flex gap-2">
-                                                {!certificates.some((c: any) => c.reference_id === project.id) && (
-                                                    <Button variant="outline" size="sm" onClick={() => claimCertificateMutation.mutate({
-                                                        user_email: user.email,
-                                                        type: 'project',
-                                                        reference_id: project.id,
-                                                        title: `Project Completed: ${project.title}`,
-                                                        skills: project.tags || project.skills || []
-                                                    })} disabled={claimCertificateMutation.isPending}>
-                                                        Claim Portfolio Credit
+                                            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+                                                <Link href={createPageUrl(`/project/${project.id}`)} className="flex-1">
+                                                    <Button variant="outline" className="w-full h-auto py-2 px-4 flex flex-col items-center gap-0 border-slate-200 hover:bg-slate-50">
+                                                        <div className="flex items-center gap-1.5 font-bold text-slate-900 text-sm">
+                                                            <Globe className="w-3.5 h-3.5 text-blue-500" />
+                                                            Public Profile
+                                                        </div>
+                                                        <span className="text-[9px] text-slate-400 font-normal">Share project over internet</span>
                                                     </Button>
-                                                )}
-                                                <Button variant="outline" size="sm">
-                                                    <ExternalLink className="w-4 h-4 mr-1" />
-                                                    View
-                                                </Button>
+                                                </Link>
+                                                <Link href={createPageUrl(`/dashboard/project-workspace?id=${project.id}`)} className="flex-1">
+                                                    <Button className="w-full h-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm py-3 px-6">
+                                                        View Project
+                                                    </Button>
+                                                </Link>
                                             </div>
                                         </div>
                                     ))}
@@ -631,51 +642,12 @@ export default function Profile() {
                     </motion.div>
                 )}
 
-                {/* Portfolio Showcase Section */}
-                {certificates.filter((c: any) => c.type === 'project').length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                    >
-                        <Card className="border-slate-100">
-                            <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <Briefcase className="w-5 h-5 text-purple-600" />
-                                    Portfolio Credits
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid sm:grid-cols-2 gap-4">
-                                    {certificates.filter((c: any) => c.type === 'project').map((portfolio: any) => (
-                                        <PortfolioCard key={portfolio.id} portfolioItem={portfolio} />
-                                    ))}
-                                    {certificates.filter((c: any) => c.type === 'project').map((cert: any) => {
-                                        const project = projects.find((p: any) => p.id === cert.reference_id);
-                                        return (
-                                            <CertificateCard 
-                                                key={`cert-${cert.id}`} 
-                                                certificate={{
-                                                    ...cert, 
-                                                    title: cert.title + " Certificate",
-                                                    userName: user.full_name || user.displayName || user.email,
-                                                    instructorName: project?.mentorName || 'Project Lead',
-                                                    designation: 'Portfolio Credit',
-                                                    skills: cert.skills?.join(', ') || project?.tags?.join(', ') || ""
-                                                }} 
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                )}
+
             </div>
 
             {/* Edit Dialog */}
             <Dialog open={isEditing} onOpenChange={setIsEditing}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Edit Profile</DialogTitle>
                     </DialogHeader>
@@ -736,20 +708,26 @@ export default function Profile() {
                                     value={newSkill}
                                     onChange={(e) => setNewSkill(e.target.value)}
                                     placeholder="Add a skill"
-                                    onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                                 />
-                                <Button onClick={addSkill} size="icon" variant="outline">
+                                <Button onClick={addSkill} size="icon" variant="outline" type="button">
                                     <Plus className="w-4 h-4" />
                                 </Button>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {editData.skills.map((skill, i) => (
-                                    <Badge key={i} variant="secondary" className="gap-1">
+                                    <Badge key={i} variant="secondary" className="pl-3 pr-1 py-1 gap-1 flex items-center">
                                         {skill}
-                                        <X
-                                            className="w-3 h-3 cursor-pointer hover:text-red-600"
-                                            onClick={() => removeSkill(skill)}
-                                        />
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                removeSkill(skill);
+                                            }}
+                                            className="p-0.5 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-red-600"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
                                     </Badge>
                                 ))}
                             </div>
@@ -773,12 +751,73 @@ export default function Profile() {
                                 {editData.profileLinks.map((link, i) => (
                                     <div key={i} className="flex items-center justify-between p-2 border border-slate-200 rounded-lg bg-slate-50">
                                         <span className="text-sm text-slate-600 truncate">{link}</span>
-                                        <X
-                                            className="w-4 h-4 cursor-pointer text-slate-400 hover:text-red-600"
-                                            onClick={() => removeLink(link)}
-                                        />
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                removeLink(link);
+                                            }}
+                                            className="p-1 hover:bg-slate-200 rounded-full transition-colors text-slate-400 hover:text-red-600"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* Showcase Projects */}
+                        <div>
+                            <label className="text-sm font-medium text-slate-700 mb-2 block">Showcase Projects</label>
+                            <p className="text-xs text-slate-500 mb-3">Select projects to feature on your public profile.</p>
+                            <div className="space-y-2 max-h-40 overflow-y-auto p-3 border rounded-xl bg-slate-50">
+                                {userProjects.map((p: any) => (
+                                    <label key={p.id} className="flex items-center gap-3 cursor-pointer group">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={editData.showcaseProjects?.includes(p.id)}
+                                            onChange={() => {
+                                                const current = editData.showcaseProjects || [];
+                                                if (current.includes(p.id)) {
+                                                    setEditData({...editData, showcaseProjects: current.filter(id => id !== p.id)});
+                                                } else {
+                                                    setEditData({...editData, showcaseProjects: [...current, p.id]});
+                                                }
+                                            }}
+                                            className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                                        />
+                                        <span className="text-sm text-slate-700 group-hover:text-slate-900 truncate">{p.title}</span>
+                                        {p.status === 'Completed' && <Badge className="ml-auto text-[9px] h-5 bg-emerald-50 text-emerald-600 border-emerald-100 uppercase tracking-tighter">Completed</Badge>}
+                                    </label>
+                                ))}
+                                {userProjects.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No projects available</p>}
+                            </div>
+                        </div>
+
+                        {/* Showcase Courses */}
+                        <div>
+                            <label className="text-sm font-medium text-slate-700 mb-2 block">Showcase Courses</label>
+                            <p className="text-xs text-slate-500 mb-3">Select completed courses to feature on your public profile.</p>
+                            <div className="space-y-2 max-h-40 overflow-y-auto p-3 border rounded-xl bg-slate-50">
+                                {completedCourses.map((c: any) => (
+                                    <label key={c.id} className="flex items-center gap-3 cursor-pointer group">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={editData.showcaseCourses?.includes(c.id)}
+                                            onChange={() => {
+                                                const current = editData.showcaseCourses || [];
+                                                if (current.includes(c.id)) {
+                                                    setEditData({...editData, showcaseCourses: current.filter(id => id !== c.id)});
+                                                } else {
+                                                    setEditData({...editData, showcaseCourses: [...current, c.id]});
+                                                }
+                                            }}
+                                            className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                                        />
+                                        <span className="text-sm text-slate-700 group-hover:text-slate-900 truncate">{c.title}</span>
+                                    </label>
+                                ))}
+                                {completedCourses.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No completed courses available</p>}
                             </div>
                         </div>
 

@@ -365,3 +365,68 @@ exports.inviteUserToProject = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Complete a project
+exports.completeProject = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const projectRef = db.collection('projects').doc(id);
+        const projectDoc = await projectRef.get();
+
+        if (!projectDoc.exists) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        if (projectDoc.data().ownerId !== req.user.uid) {
+            return res.status(403).json({ message: 'Unauthorized to complete this project' });
+        }
+
+        // Update project status
+        await projectRef.update({
+            status: 'Completed',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Get all members
+        const membersSnapshot = await db.collection('projects').doc(id).collection('members').get();
+        const membersData = membersSnapshot.docs.map(doc => doc.data());
+        const validMembers = membersData.filter(m => m.status !== 'pending' && m.status !== 'invited' && m.status !== 'rejected');
+
+        const batch = db.batch();
+
+        for (const member of validMembers) {
+            if (member.user_id) {
+                // Award points
+                const pointsRef = db.collection('userpointss').doc(member.user_id);
+                // Also create a certificate (portfolio credit)
+                const certRef = db.collection('certificates').doc();
+
+                batch.set(pointsRef, {
+                    total_points: admin.firestore.FieldValue.increment(100),
+                    project_points: admin.firestore.FieldValue.increment(100),
+                    user_email: member.user_email,
+                    user_name: member.user_name || member.user_email || 'Collaborator',
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                batch.set(certRef, {
+                    user_email: member.user_email,
+                    userName: member.user_name || member.user_email || '',
+                    type: 'project',
+                    reference_id: id,
+                    title: projectDoc.data().title,
+                    description: 'Completed Project Collaboration',
+                    skills: projectDoc.data().tags || [],
+                    issued_at: admin.firestore.FieldValue.serverTimestamp(),
+                });
+            }
+        }
+
+        await batch.commit();
+
+        res.status(200).json({ message: 'Project marked as completed', id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+};

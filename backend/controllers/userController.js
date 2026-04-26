@@ -77,7 +77,7 @@ exports.promoteToAdmin = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
     try {
         const userId = req.user.uid;
-        const { displayName, first_name, last_name, roles, skills, bio, profileLinks } = req.body;
+        const { displayName, first_name, last_name, roles, skills, bio, profileLinks, showcaseProjects, showcaseCourses } = req.body;
 
         const userData = {
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -96,6 +96,8 @@ exports.updateUserProfile = async (req, res) => {
         if (skills !== undefined) userData.skills = skills;
         if (bio !== undefined) userData.bio = bio;
         if (profileLinks !== undefined) userData.profileLinks = profileLinks;
+        if (showcaseProjects !== undefined) userData.showcaseProjects = showcaseProjects;
+        if (showcaseCourses !== undefined) userData.showcaseCourses = showcaseCourses;
 
         userData.isOnboardingComplete = true;
 
@@ -118,6 +120,18 @@ exports.getPublicProfileById = async (req, res) => {
 
         const data = doc.data();
         
+        // Fetch points
+        const pointsDoc = await db.collection('userpointss').doc(id).get();
+        const pointsData = pointsDoc.exists ? pointsDoc.data() : { total_points: 0, project_points: 0, course_points: 0 };
+
+        // Fetch badges
+        const badgesSnapshot = await db.collection('userbadges').where('user_email', '==', data.email).get();
+        const badges = badgesSnapshot.docs.map(d => d.data());
+
+        // Fetch certificates
+        const certSnapshot = await db.collection('certificates').where('user_email', '==', data.email).get();
+        const certificates = certSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
         // Return only safe public fields
         const publicProfile = {
             id: doc.id,
@@ -128,7 +142,14 @@ exports.getPublicProfileById = async (req, res) => {
             bio: data.bio || '',
             roles: data.roles || [],
             skills: data.skills || [],
-            profileLinks: data.profileLinks || []
+            profileLinks: data.profileLinks || [],
+            showcaseProjects: data.showcaseProjects || [],
+            showcaseCourses: data.showcaseCourses || [],
+            points: pointsData.total_points || 0,
+            project_points: pointsData.project_points || 0,
+            course_points: pointsData.course_points || 0,
+            badges: badges,
+            certificates: certificates
         };
 
         res.status(200).json(publicProfile);

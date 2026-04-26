@@ -31,7 +31,7 @@ exports.getUserCertificates = async (req, res) => {
 // Invoked when user completes a course or project
 exports.issueCertificate = async (req, res) => {
     try {
-        const { user_email, type, reference_id, title, description, skills } = req.body;
+        const { user_email, type, reference_id, title, description, skills, instructorName, designation } = req.body;
         
         if (!user_email || !type || !reference_id || !title) {
              return res.status(400).json({ message: 'Missing required fields' });
@@ -59,10 +59,32 @@ exports.issueCertificate = async (req, res) => {
             title,
             description: description || '',
             skills: skills || [],
+            instructorName: instructorName || '',
+            designation: designation || '',
             issued_at: admin.firestore.FieldValue.serverTimestamp(),
         };
 
         const docRef = await db.collection('certificates').add(newCert);
+
+        // Award points to the user
+        const userId = req.user.uid;
+        const pointsRef = db.collection('userpointss').doc(userId);
+        
+        const pointsUpdate = {
+            total_points: admin.firestore.FieldValue.increment(100),
+            user_email: user_email,
+            user_name: req.body.userName || user_email,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (type === 'course') {
+            pointsUpdate.course_points = admin.firestore.FieldValue.increment(100);
+        } else if (type === 'project') {
+            pointsUpdate.project_points = admin.firestore.FieldValue.increment(100);
+        }
+
+        await pointsRef.set(pointsUpdate, { merge: true });
+
         res.status(201).json({ id: docRef.id, ...newCert, message: 'Certificate successfully issued' });
     } catch (error) {
         res.status(500).json({ message: error.message });

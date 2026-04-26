@@ -134,10 +134,12 @@ export default function FullCertificate({ certificate, onClose }: FullCertificat
                                 {certificate.title?.replace('Course Completion: ', '') || 'Academic Excellence'}
                             </h3>
                             
-                            {certificate.skills ? (
+                            {certificate.skills && (Array.isArray(certificate.skills) ? certificate.skills.length > 0 : certificate.skills.trim().length > 0) ? (
                                 <div className="inline-block px-8 py-4 rounded-2xl mb-16 max-w-2xl" style={{ backgroundColor: '#f8fafc', border: '1px solid #f1f5f9' }}>
                                     <p className="text-xs font-bold uppercase tracking-[0.2em] mb-2" style={{ color: '#94a3b8' }}>Key Skills Mastered</p>
-                                    <p className="text-lg font-semibold" style={{ color: '#1e293b' }}>{certificate.skills}</p>
+                                    <p className="text-lg font-semibold" style={{ color: '#1e293b' }}>
+                                        {Array.isArray(certificate.skills) ? certificate.skills.join(', ') : certificate.skills}
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="h-16 mb-16" /> 

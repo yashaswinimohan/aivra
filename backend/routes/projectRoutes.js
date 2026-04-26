@@ -15,6 +15,9 @@ router.get('/:id', projectController.getProjectById);
 // Update a project
 router.put('/:id', verifyToken, projectController.updateProject);
 
+// Complete a project
+router.put('/:id/complete', verifyToken, projectController.completeProject);
+
 // Delete a project
 router.delete('/:id', verifyToken, projectController.deleteProject);
 

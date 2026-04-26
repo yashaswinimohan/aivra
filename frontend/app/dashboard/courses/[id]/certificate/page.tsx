@@ -125,20 +125,20 @@ export default function CertificatePage() {
                                 type: 'course',
                                 reference_id: courseId,
                                 title: `Course Completion: ${courseData.title}`,
+                                instructorName: courseData.certificate?.instructorName || courseData.instructorName || 'Lead Instructor',
+                                designation: courseData.certificate?.designation || "Aivra Academy",
                                 skills: courseData.certificate?.skills || ""
                             })
                         });
                         if (issueRes.ok) {
                             const newCert = await issueRes.json();
-                            const certData = {
+                            setCertificate({
                                 ...newCert,
                                 userName,
-                                instructorName: courseData.certificate?.instructorName || courseData.instructorName,
-                                designation: courseData.certificate?.designation || "Lead Instructor",
-                                skills: courseData.certificate?.skills || ""
-                            };
-                            console.log("[Certificate] Newly issued cert object:", certData);
-                            setCertificate(certData);
+                                instructorName: newCert.instructorName || courseData.certificate?.instructorName || courseData.instructorName,
+                                designation: newCert.designation || courseData.certificate?.designation || "Lead Instructor",
+                                skills: newCert.skills || courseData.certificate?.skills || ""
+                            });
                         }
                         setIsIssuing(false);
                     }

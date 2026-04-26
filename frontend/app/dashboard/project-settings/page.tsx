@@ -29,7 +29,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Loader2, Plus, X, Minus, Check, Trash2, Settings, Users, FolderOpen, LogOut } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, X, Minus, Check, Trash2, Settings, Users, FolderOpen, LogOut, Globe, Eye, ExternalLink, Link as LinkIcon, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -133,6 +133,8 @@ function ProjectSettingsContent() {
     const [resourceFile, setResourceFile] = useState<File | null>(null);
     const [isUploadingResource, setIsUploadingResource] = useState(false);
     const [isAddResourceOpen, setIsAddResourceOpen] = useState(false);
+    const [publicLinks, setPublicLinks] = useState<{ label: string, url: string }[]>([]);
+    const [newPublicLink, setNewPublicLink] = useState({ label: '', url: '' });
 
     // Initialize state from project data
     useEffect(() => {
@@ -163,6 +165,8 @@ function ProjectSettingsContent() {
                 setInviteRole(parsedRoles[0].role);
             }
             
+            setPublicLinks(project.public_links || []);
+            
             // Default tab for non-owners should be the danger zone
             if (user && !(user.id === project.ownerId || user.uid === project.ownerId)) {
                 setSettingsTab('danger');
@@ -187,7 +191,8 @@ function ProjectSettingsContent() {
                 roles_needed,
                 tags: selectedTags,
                 public_resources: publicResources,
-                private_resources: privateResources
+                private_resources: privateResources,
+                public_links: publicLinks
             });
         },
         onSuccess: () => {
@@ -411,6 +416,10 @@ function ProjectSettingsContent() {
                                     <TabsTrigger value="team" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
                                         <Users className="w-4 h-4 mr-2" />
                                         User Control
+                                    </TabsTrigger>
+                                    <TabsTrigger value="public_profile" className="w-full justify-start data-[state=active]:bg-slate-100 rounded-lg px-3 py-2.5">
+                                        <Globe className="w-4 h-4 mr-2" />
+                                        Public Profile
                                     </TabsTrigger>
                                 </>
                             )}
@@ -798,6 +807,170 @@ function ProjectSettingsContent() {
                                     {updateProjectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                     Save Resources
                                 </Button>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="public_profile" className="m-0 space-y-8">
+                            <div className="flex items-center justify-between border-b pb-4 mb-4">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-slate-900">Project Public Profile</h3>
+                                    <p className="text-sm text-slate-500">Configure how this project looks when shared with others.</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Link href={createPageUrl(`/project/${projectId}`)} target="_blank">
+                                        <Button variant="outline" className="bg-white">
+                                            <ExternalLink className="w-4 h-4 mr-2" />
+                                            View Live Profile
+                                        </Button>
+                                    </Link>
+                                    <Button
+                                        onClick={() => updateProjectMutation.mutate()}
+                                        disabled={updateProjectMutation.isPending}
+                                        className="bg-slate-900 hover:bg-slate-800"
+                                    >
+                                        {updateProjectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Save Profile"}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="grid lg:grid-cols-2 gap-8">
+                                {/* Editor Side */}
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Project Links (Links to Work)</label>
+                                            <p className="text-xs text-slate-500 mb-3">Add links to live demos, GitHub repositories, or case studies.</p>
+                                            
+                                            <div className="space-y-3">
+                                                {publicLinks.map((link, idx) => (
+                                                    <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 group">
+                                                        <LinkIcon className="w-4 h-4 text-slate-400" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-slate-900 truncate">{link.label}</p>
+                                                            <p className="text-xs text-slate-500 truncate">{link.url}</p>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => setPublicLinks(publicLinks.filter((_, i) => i !== idx))}
+                                                            className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+
+                                                <div className="p-4 border border-dashed border-slate-200 rounded-xl space-y-3 bg-slate-50/50">
+                                                    <div className="grid grid-cols-1 gap-3">
+                                                        <Input 
+                                                            placeholder="Link Label (e.g. Live Demo, Case Study)" 
+                                                            value={newPublicLink.label}
+                                                            onChange={(e) => setNewPublicLink({...newPublicLink, label: e.target.value})}
+                                                            className="bg-white"
+                                                        />
+                                                        <Input 
+                                                            placeholder="URL (https://...)" 
+                                                            value={newPublicLink.url}
+                                                            onChange={(e) => setNewPublicLink({...newPublicLink, url: e.target.value})}
+                                                            className="bg-white"
+                                                        />
+                                                    </div>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        className="w-full bg-white"
+                                                        onClick={() => {
+                                                            if (newPublicLink.label && newPublicLink.url) {
+                                                                setPublicLinks([...publicLinks, newPublicLink]);
+                                                                setNewPublicLink({ label: '', url: '' });
+                                                            }
+                                                        }}
+                                                        disabled={!newPublicLink.label || !newPublicLink.url}
+                                                    >
+                                                        <Plus className="w-4 h-4 mr-2" />
+                                                        Add Work Link
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Preview Side */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                                            <Eye className="w-4 h-4" />
+                                            Preview
+                                        </label>
+                                        <Badge variant="outline" className="text-[10px] uppercase tracking-wider">Public View</Badge>
+                                    </div>
+                                    
+                                    <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-xl bg-slate-50 p-1">
+                                        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100">
+                                            <div className="h-20 bg-gradient-to-r from-blue-600 to-indigo-600" />
+                                            <div className="p-6 -mt-10">
+                                                <div className="w-16 h-16 rounded-2xl bg-white shadow-md flex items-center justify-center border-4 border-white mb-4">
+                                                    <div className="w-full h-full rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-xl">
+                                                        {editProject.title?.[0] || "P"}
+                                                    </div>
+                                                </div>
+                                                
+                                                <h4 className="text-xl font-bold text-slate-900 mb-1">{editProject.title || "Project Title"}</h4>
+                                                <p className="text-xs text-slate-500 flex items-center gap-1.5 mb-4">
+                                                    <Clock className="w-3 h-3" />
+                                                    {editProject.duration}
+                                                </p>
+
+                                                <div className="flex flex-wrap gap-1.5 mb-6">
+                                                    {selectedTags.length > 0 ? selectedTags.map(tag => (
+                                                        <Badge key={tag} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100 text-[10px]">
+                                                            {tag}
+                                                        </Badge>
+                                                    )) : (
+                                                        <span className="text-xs text-slate-400 italic">No tags selected</span>
+                                                    )}
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Project Summary</h5>
+                                                        <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed">
+                                                            {editProject.description || "No description provided yet."}
+                                                        </p>
+                                                    </div>
+
+                                                    {publicLinks.length > 0 && (
+                                                        <div>
+                                                            <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Links to Work</h5>
+                                                            <div className="grid grid-cols-1 gap-2">
+                                                                {publicLinks.map((link, i) => (
+                                                                    <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                                                                        <span className="font-medium text-slate-700">{link.label}</span>
+                                                                        <ExternalLink className="w-3 h-3 text-slate-400" />
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div>
+                                                        <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Team Members</h5>
+                                                        <div className="flex -space-x-2">
+                                                            {(project?.team_members || []).slice(0, 5).map((m: any, i: number) => (
+                                                                <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                                                    {m.name?.[0] || "?"}
+                                                                </div>
+                                                            ))}
+                                                            {(project?.team_members?.length || 0) > 5 && (
+                                                                <div className="w-8 h-8 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                                                    +{(project?.team_members?.length || 0) - 5}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </TabsContent>
 
