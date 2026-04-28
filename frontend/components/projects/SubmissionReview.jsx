@@ -159,19 +159,7 @@ export default function SubmissionReview({ submission, reviewer, onUpdate, onClo
                         />
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl">
-                        <div className="flex items-center gap-3">
-                            <Star className="w-5 h-5 text-amber-500" />
-                            <div>
-                                <p className="font-medium text-slate-900">Feature on Showcase</p>
-                                <p className="text-sm text-slate-500">Highlight this project publicly</p>
-                            </div>
-                        </div>
-                        <Switch
-                            checked={review.is_featured}
-                            onCheckedChange={(v) => setReview({ ...review, is_featured: v })}
-                        />
-                    </div>
+
 
                     <div className="flex gap-3 pt-2">
                         <Button variant="outline" onClick={onClose} className="flex-1">

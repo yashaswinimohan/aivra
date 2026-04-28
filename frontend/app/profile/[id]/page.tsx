@@ -130,10 +130,6 @@ function ProfileContent() {
                                                     {profile.role}
                                                 </span>
                                             ) : null}
-                                            <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold">
-                                                <Trophy className="w-3 h-3" />
-                                                {profile.points || 0} Points
-                                            </span>
                                         </div>
                                     </div>
                                     
@@ -233,51 +229,19 @@ function ProfileContent() {
 
                             <div className="space-y-8">
                                 <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
-                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Stats & Achievements</h3>
+                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Stats</h3>
                                     <div className="space-y-4">
-                                        <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-slate-100">
-                                            <div className="flex items-center gap-2">
-                                                <Trophy className="w-4 h-4 text-indigo-500" />
-                                                <span className="text-sm font-bold text-slate-600">Total Points</span>
-                                            </div>
-                                            <span className="text-lg font-black text-indigo-600">{profile.points || 0}</span>
-                                        </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100">
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Projects</p>
-                                                <p className="text-sm font-black text-slate-900">{profile.project_points || 0} pts</p>
+                                                <p className="text-sm font-black text-slate-900">{profile.project_count || 0}</p>
                                             </div>
                                             <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100">
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Courses</p>
                                                 <p className="text-sm font-black text-slate-900">{profile.course_points || 0} pts</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-slate-100">
-                                            <div className="flex items-center gap-2">
-                                                <Award className="w-4 h-4 text-amber-500" />
-                                                <span className="text-sm font-bold text-slate-600">Badges</span>
-                                            </div>
-                                            <span className="text-lg font-black text-amber-500">{(profile.badges?.length || 0)}</span>
-                                        </div>
                                     </div>
-
-                                    {/* Mini Badge Gallery */}
-                                    {profile.badges && profile.badges.length > 0 && (
-                                        <div className="mt-6 pt-6 border-t border-slate-100">
-                                            <div className="flex flex-wrap gap-2">
-                                                {profile.badges.slice(0, 4).map((badge: any, i: number) => (
-                                                    <div key={i} className="w-10 h-10 rounded-full bg-white shadow-sm border border-slate-50 flex items-center justify-center text-xl" title={badge.name}>
-                                                        {badge.icon || '🏆'}
-                                                    </div>
-                                                ))}
-                                                {profile.badges.length > 4 && (
-                                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                                                        +{profile.badges.length - 4}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>

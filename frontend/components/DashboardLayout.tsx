@@ -119,22 +119,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={pathname === '/dashboard/showcase'} tooltip="Showcase" className="h-12 rounded-xl data-[active=true]:bg-teal-50 data-[active=true]:text-teal-700 text-slate-600 hover:bg-slate-50">
-                                    <Link href="/dashboard/showcase" className="text-[15px] font-medium">
-                                        <Sparkles className="size-5 mr-3" />
-                                        <span>Showcase</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={pathname === '/dashboard/leaderboard'} tooltip="Leaderboard" className="h-12 rounded-xl data-[active=true]:bg-teal-50 data-[active=true]:text-teal-700 text-slate-600 hover:bg-slate-50">
-                                    <Link href="/dashboard/leaderboard" className="text-[15px] font-medium">
-                                        <Trophy className="size-5 mr-3" />
-                                        <span>Leaderboard</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
+
                             <SidebarMenuItem>
                                 <SidebarMenuButton asChild isActive={pathname === '/dashboard/profile'} tooltip="Profile" className="h-12 rounded-xl data-[active=true]:bg-teal-50 data-[active=true]:text-teal-700 text-slate-600 hover:bg-slate-50">
                                     <Link href="/dashboard/profile" className="text-[15px] font-medium">

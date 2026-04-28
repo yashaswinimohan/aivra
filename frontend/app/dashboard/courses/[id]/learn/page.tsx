@@ -66,6 +66,8 @@ export default function LearnPage() {
 
     const { user } = useAuth(); // Import useAuth
     const [completedChapters, setCompletedChapters] = useState<string[]>([]);
+    const [completedQuizzes, setCompletedQuizzes] = useState<string[]>([]);
+    const [allQuizAnswers, setAllQuizAnswers] = useState<Record<string, any>>({});
     const [progress, setProgress] = useState(0);
 
     const [course, setCourse] = useState<Course | null>(null);
@@ -88,6 +90,9 @@ export default function LearnPage() {
     const [currentSubmission, setCurrentSubmission] = useState<any>(null);
 
     const editorInstanceRef = useRef<any>(null);
+
+    const activeModule = course?.modules?.find(m => m.id === activeModuleId);
+    const activeChapter = activeModule?.chapters?.find(c => c.id === activeChapterId);
 
     useEffect(() => {
         const fetchCourse = async () => {
@@ -166,6 +171,8 @@ export default function LearnPage() {
                 if (res.ok) {
                     const data = await res.json();
                     setCompletedChapters(data.completedChapters || []);
+                    setCompletedQuizzes(data.completedQuizzes || []);
+                    setAllQuizAnswers(data.quizAnswers || {});
                     // setProgress(data.progress || 0); // Optionally use backend progress
                 }
             } catch (error) {
@@ -207,6 +214,35 @@ export default function LearnPage() {
             console.error("Failed to update progress:", error);
             // Revert on error
             setCompletedChapters(completedChapters);
+        }
+    };
+
+    const markQuizAsComplete = async (answers?: any) => {
+        if (!activeChapterId || !user) return;
+        
+        // Optimistically update
+        const newQuizzes = completedQuizzes.includes(activeChapterId) ? completedQuizzes : [...completedQuizzes, activeChapterId];
+        setCompletedQuizzes(newQuizzes);
+        if (answers) {
+            setAllQuizAnswers(prev => ({ ...prev, [activeChapterId]: answers }));
+        }
+
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/enrollments/${courseId}/progress`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    quizId: activeChapterId,
+                    isCompleted: true,
+                    quizAnswers: answers
+                })
+            });
+        } catch (error) {
+            console.error("Failed to update quiz progress:", error);
         }
     };
 
@@ -252,6 +288,10 @@ export default function LearnPage() {
         const passed = scorePercentage >= passingScore;
         setQuizPassed(passed);
         setShowQuizResult(true);
+
+        if (passed) {
+            await markQuizAsComplete(quizAnswers);
+        }
 
         const passingScoreAssessment = activeChapter.content?.assessmentSection?.passingScore || 70;
         const hasUnpassedAssessment = activeChapter.content?.assessmentSection && (!currentSubmission || !currentSubmission.graded || currentSubmission.score < passingScoreAssessment);
@@ -454,7 +494,33 @@ export default function LearnPage() {
 
     useEffect(() => {
         resetQuiz();
-    }, [activeChapterId]);
+        if (activeChapterId) {
+            if (completedQuizzes.includes(activeChapterId)) {
+                setQuizPassed(true);
+                setShowQuizResult(true);
+                setIsQuizStarted(true);
+            }
+            if (allQuizAnswers[activeChapterId]) {
+                setQuizAnswers(allQuizAnswers[activeChapterId]);
+            }
+        }
+    }, [activeChapterId, completedQuizzes, allQuizAnswers]);
+
+    // Auto-complete chapter if both quiz and assessment are passed
+    useEffect(() => {
+        if (!activeChapter || !activeChapterId || !user || completedChapters.includes(activeChapterId)) return;
+
+        const quizNeeded = !!activeChapter.content?.mcqSection;
+        const assessmentNeeded = !!activeChapter.content?.assessmentSection;
+
+        const quizDone = !quizNeeded || quizPassed || completedQuizzes.includes(activeChapterId);
+        const assessmentDone = !assessmentNeeded || !!currentSubmission;
+
+        if (quizDone && assessmentDone) {
+            console.log(`[Progress] Auto-completing chapter ${activeChapterId}`);
+            markAsComplete();
+        }
+    }, [activeChapterId, quizPassed, completedQuizzes, currentSubmission, completedChapters, activeChapter, user]);
 
     if (loading) {
         return (
@@ -466,8 +532,7 @@ export default function LearnPage() {
 
     if (!course) return <div className="p-8 text-center text-slate-500">Course not found.</div>;
 
-    const activeModule = course.modules?.find(m => m.id === activeModuleId);
-    const activeChapter = activeModule?.chapters?.find(c => c.id === activeChapterId);
+
 
     return (
         <div className="h-screen flex flex-col overflow-hidden bg-white">
@@ -516,11 +581,14 @@ export default function LearnPage() {
                             let isModuleUnlocked = true;
                             for (let i = 0; i < mIndex; i++) {
                                 const prevModule = course.modules[i];
-                                const prevTotal = prevModule.chapters?.length || 0;
-                                const prevCompleted = prevModule.chapters?.filter(c => completedChapters.includes(c.id)).length || 0;
-                                if (prevTotal === 0 || prevTotal !== prevCompleted) {
-                                    isModuleUnlocked = false;
-                                    break;
+                                const chapters = prevModule.chapters || [];
+                                const prevTotal = chapters.length;
+                                if (prevTotal > 0) {
+                                    const prevCompleted = chapters.filter(c => completedChapters.includes(c.id)).length;
+                                    if (prevTotal !== prevCompleted) {
+                                        isModuleUnlocked = false;
+                                        break;
+                                    }
                                 }
                             }
 
@@ -818,8 +886,8 @@ export default function LearnPage() {
                                 <div className="mt-16 pt-8 border-t border-slate-200">
                                     {nextChapter ? (
                                         <div className="flex justify-end">
-                                            {((completedChapters.includes(activeChapter.id) || (!activeChapter.content?.mcqSection || quizPassed)) && 
-                                                (!activeChapter.content?.assessmentSection || (currentSubmission?.graded && currentSubmission?.score >= (activeChapter.content.assessmentSection.passingScore || 70)))
+                                            {((completedChapters.includes(activeChapter.id) || (!activeChapter.content?.mcqSection || quizPassed || completedQuizzes.includes(activeChapter.id))) && 
+                                                (!activeChapter.content?.assessmentSection || !!currentSubmission)
                                             ) && (
                                                 <button
                                                     onClick={handleNext}

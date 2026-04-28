@@ -243,7 +243,7 @@ export default function Profile() {
             >
                 <h1 className="text-3xl font-bold text-slate-900 mb-2">My Profile</h1>
                 <p className="text-slate-600">
-                    Manage your profile and showcase your achievements.
+                    Manage your profile settings.
                 </p>
             </motion.div>
 
@@ -270,12 +270,6 @@ export default function Profile() {
                                 <div className="flex-1">
                                     <h2 className="text-2xl font-bold text-slate-900">{user.full_name || 'User'}</h2>
                                     <p className="text-slate-500">{user.email}</p>
-                                    {currentRank > 0 && (
-                                        <Badge className="mt-2 bg-amber-100 text-amber-700 border-0">
-                                            <Trophy className="w-3 h-3 mr-1" />
-                                            Rank #{currentRank} • Top {percentile}%
-                                        </Badge>
-                                    )}
                                 </div>
 
                                 <Button
@@ -288,13 +282,7 @@ export default function Profile() {
                                 </Button>
                             </div>
 
-                            {/* Points Display */}
-                            <div className="mb-6">
-                                <PointsDisplay
-                                    points={userPoints?.total_points || 0}
-                                    streak={userPoints?.streak_days || 0}
-                                />
-                            </div>
+
 
                             {/* Bio */}
                             {user.bio && (
@@ -339,15 +327,7 @@ export default function Profile() {
                     transition={{ delay: 0.2 }}
                     className="grid sm:grid-cols-4 gap-4"
                 >
-                    <Card className="border-slate-100 bg-gradient-to-br from-amber-50 to-yellow-50">
-                        <CardContent className="pt-6 text-center">
-                            <ProgressRing progress={Math.min((userPoints?.total_points || 0) / 50, 100)} size={80}>
-                                <Zap className="w-6 h-6 text-amber-500" />
-                            </ProgressRing>
-                            <p className="text-2xl font-bold text-slate-900 mt-2">{userPoints?.total_points || 0}</p>
-                            <p className="text-sm text-slate-500">Total Points</p>
-                        </CardContent>
-                    </Card>
+
 
                     <Card className="border-slate-100">
                         <CardContent className="pt-6">
@@ -377,118 +357,12 @@ export default function Profile() {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-slate-100">
-                        <CardContent className="pt-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
-                                    <Award className="w-6 h-6 text-amber-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-slate-900">{earnedBadges.length}</p>
-                                    <p className="text-sm text-slate-500">Badges</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+
                 </motion.div>
 
-                {/* Badges Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25 }}
-                >
-                    <Card className="border-slate-100">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <Trophy className="w-5 h-5 text-amber-500" />
-                                Badges & Achievements
-                            </CardTitle>
-                            <Link href={createPageUrl('Leaderboard')}>
-                                <Button variant="ghost" size="sm" className="text-purple-600">
-                                    View Leaderboard
-                                </Button>
-                            </Link>
-                        </CardHeader>
-                        <CardContent>
-                            {badges.length === 0 ? (
-                                <div className="text-center py-8 bg-slate-50 rounded-xl">
-                                    <Award className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                                    <p className="text-slate-500">No badges available yet</p>
-                                </div>
-                            ) : (
-                                <>
-                                    {/* Earned Badges */}
-                                    {earnedBadges.length > 0 && (
-                                        <div className="mb-6">
-                                            <h4 className="text-sm font-medium text-slate-700 mb-4">Earned ({earnedBadges.length})</h4>
-                                            <div className="flex flex-wrap gap-6">
-                                                {earnedBadges.map((badge: any) => (
-                                                    <BadgeCard key={badge.id} badge={badge} earned size="md" />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
 
-                                    {/* Locked Badges */}
-                                    {unearnedBadges.length > 0 && (
-                                        <div>
-                                            <h4 className="text-sm font-medium text-slate-500 mb-4">Locked ({unearnedBadges.length})</h4>
-                                            <div className="flex flex-wrap gap-6">
-                                                {unearnedBadges.map((badge: any) => (
-                                                    <BadgeCard key={badge.id} badge={badge} earned={false} size="md" />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
-                </motion.div>
 
-                {/* Points Breakdown */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                >
-                    <Card className="border-slate-100">
-                        <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <Target className="w-5 h-5 text-teal-600" />
-                                Points Breakdown
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid sm:grid-cols-3 gap-4">
-                                <div className="p-4 bg-teal-50 rounded-xl">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <BookOpen className="w-5 h-5 text-teal-600" />
-                                        <span className="font-medium text-slate-900">Course Points</span>
-                                    </div>
-                                    <p className="text-2xl font-bold text-teal-700">{userPoints?.course_points || 0}</p>
-                                </div>
 
-                                <div className="p-4 bg-purple-50 rounded-xl">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <Briefcase className="w-5 h-5 text-purple-600" />
-                                        <span className="font-medium text-slate-900">Project Points</span>
-                                    </div>
-                                    <p className="text-2xl font-bold text-purple-700">{userPoints?.project_points || 0}</p>
-                                </div>
-
-                                <div className="p-4 bg-orange-50 rounded-xl">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <Flame className="w-5 h-5 text-orange-600" />
-                                        <span className="font-medium text-slate-900">Streak Days</span>
-                                    </div>
-                                    <p className="text-2xl font-bold text-orange-700">{userPoints?.streak_days || 0}</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
 
                 {/* Completed Courses */}
                 <motion.div

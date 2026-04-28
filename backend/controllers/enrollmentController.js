@@ -56,11 +56,11 @@ exports.getUserEnrollments = async (req, res) => {
     }
 };
 
-// Update progress (Mark chapter as complete)
+// Update progress (Mark chapter or quiz as complete)
 exports.updateProgress = async (req, res) => {
     try {
         const { courseId } = req.params;
-        const { chapterId, isCompleted } = req.body;
+        const { chapterId, quizId, isCompleted } = req.body;
         const userId = req.user.uid;
 
         const enrollmentId = `${userId}_${courseId}`;
@@ -72,39 +72,65 @@ exports.updateProgress = async (req, res) => {
         }
 
         const data = doc.data();
-        let completedChapters = data.completedChapters || [];
-
-        if (isCompleted) {
-            if (!completedChapters.includes(chapterId)) {
-                completedChapters.push(chapterId);
-            }
-        } else {
-            completedChapters = completedChapters.filter(id => id !== chapterId);
-        }
-
-        // Calculate progress dynamically
-        let progress = data.progress || 0;
-        try {
-            const courseRef = db.collection('courses').doc(courseId);
-            const courseDoc = await courseRef.get();
-            if (courseDoc.exists) {
-                const courseData = courseDoc.data();
-                const totalChapters = (courseData.modules || []).reduce((acc, m) => acc + (m.chapters?.length || 0), 0);
-                if (totalChapters > 0) {
-                    progress = Math.round((completedChapters.length / totalChapters) * 100);
-                }
-            }
-        } catch (err) {
-            console.error("Progress calc error:", err);
-        }
-
-        await enrollmentRef.update({
-            completedChapters,
-            progress,
+        const updateData = {
             lastAccessedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        };
 
-        res.status(200).json({ message: "Progress updated", completedChapters, progress });
+        if (chapterId) {
+            let completedChapters = data.completedChapters || [];
+            if (isCompleted) {
+                if (!completedChapters.includes(chapterId)) {
+                    completedChapters.push(chapterId);
+                }
+            } else {
+                completedChapters = completedChapters.filter(id => id !== chapterId);
+            }
+            updateData.completedChapters = completedChapters;
+
+            // Calculate progress dynamically
+            try {
+                const courseRef = db.collection('courses').doc(courseId);
+                const courseDoc = await courseRef.get();
+                if (courseDoc.exists) {
+                    const courseData = courseDoc.data();
+                    const totalChapters = (courseData.modules || []).reduce((acc, m) => acc + (m.chapters?.length || 0), 0);
+                    if (totalChapters > 0) {
+                        updateData.progress = Math.round((completedChapters.length / totalChapters) * 100);
+                    }
+                }
+            } catch (err) {
+                console.error("Progress calc error:", err);
+            }
+        }
+
+        if (quizId) {
+            let completedQuizzes = data.completedQuizzes || [];
+            if (isCompleted) {
+                if (!completedQuizzes.includes(quizId)) {
+                    completedQuizzes.push(quizId);
+                }
+            } else {
+                completedQuizzes = completedQuizzes.filter(id => id !== quizId);
+            }
+            updateData.completedQuizzes = completedQuizzes;
+
+            // Store individual answers if provided
+            if (req.body.quizAnswers) {
+                const quizAnswers = data.quizAnswers || {};
+                quizAnswers[quizId] = req.body.quizAnswers;
+                updateData.quizAnswers = quizAnswers;
+            }
+        }
+
+        await enrollmentRef.update(updateData);
+
+        res.status(200).json({ 
+            message: "Progress updated", 
+            completedChapters: updateData.completedChapters || data.completedChapters,
+            completedQuizzes: updateData.completedQuizzes || data.completedQuizzes,
+            quizAnswers: updateData.quizAnswers || data.quizAnswers,
+            progress: updateData.progress || data.progress 
+        });
 
     } catch (error) {
         res.status(500).json({ message: error.message });
