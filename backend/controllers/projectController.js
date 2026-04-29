@@ -20,7 +20,11 @@ exports.createProject = async (req, res) => {
 
         // Fetch user basic info to store as owner in team
         const userDoc = await db.collection('users').doc(ownerId).get();
-        const ownerName = userDoc.exists ? userDoc.data().full_name : 'Project Owner';
+        let ownerName = 'Project Owner';
+        if (userDoc.exists) {
+            const data = userDoc.data();
+            ownerName = data.full_name || data.displayName || data.firstName || 'Project Owner';
+        }
 
         const newProject = {
             title,
